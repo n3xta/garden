@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>MELODY.SYS</title>
+  <title>Garden</title>
 
   <!-- Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.6.0/p5.min.js"></script>
@@ -18,24 +18,17 @@
 </head>
 
 <body>
-  <div class="terminal-header">
-    > SOUND SYSTEM ONLINE...<br>
-    > READY <span class="blink">_</span>
-  </div>
-  
-  <div class="pixel-decoration top-left">
-    /* MINIMAL MODE ACTIVE */<br>
-    system.melody.initialize();<br>
-    audio: ready<br>
-    interface: ready
-  </div>
-  
-  <div class="pixel-decoration bottom-right">
-    ■ ■ ■ ■<br>
-    Press <span class="key">SPACE</span> to play/pause<br>
-    Click in 3D space to add notes<br>
-    ■ ■ ■ ■
-  </div>
+  <!-- Decorative dots -->
+  <div class="decoration-dot dot-1" style="top: 15%; left: 10%;"></div>
+  <div class="decoration-dot dot-2" style="top: 25%; left: 85%;"></div>
+  <div class="decoration-dot dot-3" style="top: 65%; left: 20%;"></div>
+  <div class="decoration-dot dot-4" style="top: 45%; left: 75%;"></div>
+  <div class="decoration-dot dot-1" style="top: 80%; left: 40%;"></div>
+  <div class="decoration-dot dot-2" style="top: 10%; left: 50%;"></div>
+  <div class="decoration-dot dot-3" style="top: 35%; left: 30%;"></div>
+  <div class="decoration-dot dot-4" style="top: 70%; left: 60%;"></div>
+  <div class="decoration-dot dot-1" style="top: 55%; left: 5%;"></div>
+  <div class="decoration-dot dot-3" style="top: 20%; left: 70%;"></div>
 
   <!-- Note Modal -->
   <div id="note-modal" class="modal">
@@ -93,10 +86,9 @@
     </div>
   </div>
 
-  <!-- Your own scripts -->
   <script src="/js/garden.js"></script>
   <script>
-    setup();  // 启动你的场景和交互
+    setup();
   </script>
 </body>
 </html>

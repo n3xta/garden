@@ -10,6 +10,9 @@ var timeValue;
 var pitchValue;
 var addNoteBtn;
 
+// Decoration colors
+const decorationColors = ['#254d32', '#3a7d44', '#83ffa5', '#ceff3b'];
+
 // Sequencer
 var bpm = 80;
 var numberOfBars = 4;
@@ -47,7 +50,13 @@ var activeCubes = [];
 var originalMaterials = [];
 var floor;
 
-function setup() {
+// Database integration
+var gardenId = null;
+
+function setup(gardenData) {
+  // Create decorative floating dots
+  createDecorations(20);
+  
   // DOM Elements
   playButton = createButton("<i class='fas fa-play'></i>");
   playButton.parent('play-button');
@@ -132,15 +141,67 @@ function setup() {
   // Initialize Three.js
   initThree();
   
-  // Add a few random notes at startup for visual appeal
-  for (let i = 0; i < 5; i++) {
-    addRandomNote();
+  // If garden data is provided, load it
+  if (gardenData) {
+    loadGardenData(gardenData);
+  } else {
+    // Add a few random notes at startup for visual appeal
+    for (let i = 0; i < 5; i++) {
+      addRandomNote();
+    }
   }
+}
+
+// New function to load garden data
+function loadGardenData(gardenData) {
+  console.log("Loading garden data:", gardenData);
+  
+  if (gardenData._id) {
+    gardenId = gardenData._id;
+  }
+  
+  // Set the tempo
+  if (gardenData.tempo) {
+    bpm = gardenData.tempo;
+    tempoSlider.value(bpm);
+    updateTempo();
+  }
+  
+  // Load plants (notes)
+  if (gardenData.plants && Array.isArray(gardenData.plants)) {
+    gardenData.plants.forEach(plant => {
+      if (plant.track !== undefined && plant.step !== undefined) {
+        createSingleCube(plant.track, plant.step);
+        cells[plant.track][plant.step] = 1;
+      }
+    });
+  }
+}
+
+// New function to get all plants for saving
+function getAllPlants() {
+  const plants = [];
+  
+  for (let track = 0; track < nTracks; track++) {
+    for (let step = 0; step < nSteps; step++) {
+      if (cells[track][step] === 1) {
+        plants.push({
+          track: track,
+          step: step
+        });
+      }
+    }
+  }
+  
+  return {
+    plants: plants,
+    tempo: bpm
+  };
 }
 
 function initThree() {
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x000000);
+  scene.background = null; // Make it transparent to show our custom background
   
   // Create camera
   camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -610,4 +671,26 @@ function updateTempo(){
   
   // 更新显示
   document.querySelector('.tempo-value').innerText = tempoValue + " BPM";
+}
+
+// Function to create additional decorative elements
+function createDecorations(count) {
+  const container = document.body;
+  
+  for (let i = 0; i < count; i++) {
+    const dot = document.createElement('div');
+    const dotSize = Math.random() * 5 + 3; // 3-8px
+    const colorIndex = Math.floor(Math.random() * decorationColors.length);
+    
+    dot.className = 'decoration-dot';
+    dot.style.width = `${dotSize}px`;
+    dot.style.height = `${dotSize}px`;
+    dot.style.backgroundColor = decorationColors[colorIndex];
+    dot.style.top = `${Math.random() * 100}%`;
+    dot.style.left = `${Math.random() * 100}%`;
+    dot.style.animationDuration = `${Math.random() * 10 + 10}s`; // 10-20s
+    dot.style.animationDelay = `${Math.random() * 5}s`;
+    
+    container.appendChild(dot);
+  }
 }

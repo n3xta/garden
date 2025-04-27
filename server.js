@@ -19,95 +19,111 @@ app.use(express.static("public"));  // set the default folder for any static fil
 app.use(urlEncodedParser);        // attach body parser to app to parse request.body
 app.set("view engine", "ejs"); // attach ejs as templating engine
 
-// default route
+// default route - home page showing recent gardens
 app.get("/", (request, response) => {
   let query = {} // return everything in the db
-  database.find(query).exec( (err, data)=>{
+  database.find(query).sort({ createdAt: -1 }).limit(6).exec((err, data) => {
     response.render('index.ejs', {posts: data})
-  } )
+  });
 });
 
-// route that is attached to the upload form
-// uses multer middleware to parse and store image data
-// app.post("/upload", upload.single("theimage"), (req, res)=>{
-//   let currentDate = new Date() // create date instance
-
-//   // setup structure of data that is stored in the database
-//   let data = {
-//     text: req.body.text,
-//     date: currentDate.toLocaleString(),
-//     timestamp: currentDate.getTime(),
-//     likes: 0
-//   }
-
-//   if(req.file){
-//     data.image = "/uploads/" + req.file.filename
-//   }
-
-//   // ADD or INSERT the data to the database
-//   database.insert(data, (err, newData)=>{
-//     res.redirect("/") // once data has been added successfully (no error param), redirect back to / route
-//   })
-// })
-
+// Create new garden route
 app.post("/saveGarden", (req, res) => {
   let gardenData = {
-    owner: req.body.owner,
-    gardenName: req.body.gardenName,
+    owner: req.body.owner || "Anonymous",
+    gardenName: req.body.gardenName || "Untitled Garden",
     createdAt: new Date().toLocaleString(),
-    plants: req.body.plants
+    timestamp: new Date().getTime(),
+    plants: [],
+    tempo: 80
   };
 
   database.insert(gardenData, (err, newDoc) => {
+    if (err) {
+      console.error("Error creating garden:", err);
+      return res.status(500).send("Error creating garden");
+    }
     res.redirect("/garden/" + newDoc._id);
   });
 });
 
-// dynamic route for every page
-app.get('/garden/:id', (req, res)=>{
+// Update existing garden route
+app.post("/updateGarden/:id", (req, res) => {
+  let gardenId = req.params.id;
+  let plantsData;
+  
+  try {
+    plantsData = JSON.parse(req.body.plants);
+  } catch (e) {
+    console.error("Error parsing plants data:", e);
+    return res.status(400).send("Invalid plants data format");
+  }
+  
+  let query = { _id: gardenId };
+  let update = {
+    $set: {
+      plants: plantsData.plants,
+      tempo: plantsData.tempo,
+      lastModified: new Date().toLocaleString()
+    }
+  };
+  
+  database.update(query, update, {}, (err, numUpdated) => {
+    if (err) {
+      console.error("Error updating garden:", err);
+      return res.status(500).send("Error updating garden");
+    }
+    
+    if (numUpdated === 0) {
+      return res.status(404).send("Garden not found");
+    }
+    
+    res.redirect("/garden/" + gardenId);
+  });
+});
+
+// Show a specific garden
+app.get('/garden/:id', (req, res) => {
   // look for specific item in database that has the url from the params
   let query = {
     _id: req.params.id // _id is the property we are searching for in the db
   }
 
-  // searching for one specific post based off the query search
-  database.findOne(query, (err, data)=>{
-    res.render('garden.ejs', {garden: data})
-  })
-})
+  // searching for one specific garden based off the query search
+  database.findOne(query, (err, data) => {
+    if (err || !data) {
+      console.error("Error finding garden:", err);
+      return res.status(404).render('garden.ejs', {garden: null});
+    }
+    res.render('garden.ejs', {garden: data});
+  });
+});
 
-// route that is attached to search form
+// Explore gardens page
 app.get("/explore", (req, res) => {
-  // getting the term from the form
-  let searchTerm = req.query.searchTerm
+  // getting the term from the form if provided
+  let searchTerm = req.query.searchTerm;
+  let query = {};
 
-  // using REGular EXPressions to search the text properties of the database
-  let databaseSearch = {
-    text: new RegExp(searchTerm)
+  if (searchTerm) {
+    // Using regex to search in owner or gardenName fields
+    query = {
+      $or: [
+        { owner: new RegExp(searchTerm, 'i') },
+        { gardenName: new RegExp(searchTerm, 'i') }
+      ]
+    };
   }
 
-  // find all data objects that use the specific search term
-  database.find(databaseSearch, (err, results)=>{
-    res.render('explore.ejs', {gardens: results})
-  })
-})
-
-app.post('/like', (req, res)=>{
-  let postId = req.body.postId
-
-  let query = {
-    _id: postId
-  }
-
-  let update = {
-    // nedb specific syntax to update a numerical value
-    $inc: {likes: 1}
-  }
-
-  database.update(query, update, {}, (err, numUpdated)=>{
-    res.redirect('/')
-  })
-})
+  // find all gardens matching the query, sorted by creation date (newest first)
+  database.find(query).sort({ timestamp: -1 }).exec((err, results) => {
+    if (err) {
+      console.error("Error exploring gardens:", err);
+      return res.status(500).send("Error loading gardens");
+    }
+    res.render('explore.ejs', {gardens: results});
+  });
+});
 
 app.listen(6001, () => {
   // you can access your dev code via one of two URLs you can copy into the browser
