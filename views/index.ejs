@@ -5,45 +5,38 @@
   <title>The Garden is a Loop</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .hidden-form {
+      display: none;
+    }
+  </style>
 </head>
 <body>
   <div class="background"></div>
+  <img src="/2dassets/letter.png" class="letter" alt="Letter">
   
-  <div class="container">
-    <h1 class="title">The Garden is a Loop</h1>
-    <p class="subtitle">a musical ecosystem</p>
-    <p class="tiny-text">whispers of sound in a visual space</p>
-    
-    <div class="hidden-nav">
-      <div class="nav-item" id="create-garden">Create New Garden</div>
-      <a href="/explore" class="nav-item">Explore Gardens</a>
-    </div>
-    
-    <div class="intro-text">
-      <p>Here, music is planted, not played.</p>
-      <p>Each plant defines a sound.</p>
-      <p>Time grows in space, and melodies weave themselves.</p>
-    </div>
-  </div>
+  <!-- Bookmarks in top left corner -->
+  <a href="/login">
+    <img src="/2dassets/login.png" class="bookmark login" alt="Login">
+  </a>
+  <a href="/register">
+    <img src="/2dassets/signup.png" class="bookmark signup" alt="Sign Up">
+  </a>
   
-  <div class="overlay" id="overlay"></div>
+  <!-- Bookmarks in bottom right corner -->
+  <!-- Your Garden bookmark now submits a form to saveGarden -->
+  <a href="#" onclick="document.getElementById('createGardenForm').submit(); return false;">
+    <img src="/2dassets/your_garden.png" class="bookmark garden" alt="Your Garden">
+  </a>
+  <form id="createGardenForm" class="hidden-form" action="/saveGarden" method="POST">
+    <input type="hidden" name="owner" value="Anonymous">
+    <input type="hidden" name="gardenName" value="Untitled Garden">
+  </form>
   
-  <div id="create-form" class="form-container">
-    <div class="close-btn">&times;</div>
-    <h2 class="form-title">New Garden</h2>
-    <form action="/saveGarden" method="POST">
-      <div class="form-group">
-        <label for="owner">Your Name</label>
-        <input type="text" id="owner" name="owner" required>
-      </div>
-      <div class="form-group">
-        <label for="gardenName">Garden Name</label>
-        <input type="text" id="gardenName" name="gardenName" required>
-      </div>
-      <button type="submit" class="btn">Create Garden</button>
-    </form>
-  </div>
-
+  <a href="/explore">
+    <img src="/2dassets/explore.png" class="bookmark explore" alt="Explore">
+  </a>
+  
   <script src="/js/main.js"></script>
 </body>
 </html>

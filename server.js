@@ -27,6 +27,16 @@ app.get("/", (request, response) => {
   });
 });
 
+// Login route
+app.get("/login", (req, res) => {
+  res.render('login.ejs');
+});
+
+// Register route
+app.get("/register", (req, res) => {
+  res.render('register.ejs');
+});
+
 // Create new garden route
 app.post("/saveGarden", (req, res) => {
   let gardenData = {
