@@ -37,6 +37,11 @@ app.get("/register", (req, res) => {
   res.render('register.ejs');
 });
 
+app.get("/debug", (req, res) => {
+  res.render('debug.ejs');
+});
+
+
 // Create new garden route
 app.post("/saveGarden", (req, res) => {
   let gardenData = {

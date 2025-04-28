@@ -4,91 +4,25 @@
   <meta charset="UTF-8">
   <title>Garden</title>
 
-  <!-- Libraries -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.6.0/p5.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.6.0/addons/p5.dom.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.9/Tone.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three-gltf-loader@1.111.0/index.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.9/Tone.js"></script>
 
-  <!-- Style -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
   <link rel="stylesheet" href="/css/garden.css">
 </head>
 
 <body>
-  <!-- Decorative dots -->
-  <div class="decoration-dot dot-1" style="top: 15%; left: 10%;"></div>
-  <div class="decoration-dot dot-2" style="top: 25%; left: 85%;"></div>
-  <div class="decoration-dot dot-3" style="top: 65%; left: 20%;"></div>
-  <div class="decoration-dot dot-4" style="top: 45%; left: 75%;"></div>
-  <div class="decoration-dot dot-1" style="top: 80%; left: 40%;"></div>
-  <div class="decoration-dot dot-2" style="top: 10%; left: 50%;"></div>
-  <div class="decoration-dot dot-3" style="top: 35%; left: 30%;"></div>
-  <div class="decoration-dot dot-4" style="top: 70%; left: 60%;"></div>
-  <div class="decoration-dot dot-1" style="top: 55%; left: 5%;"></div>
-  <div class="decoration-dot dot-3" style="top: 20%; left: 70%;"></div>
-
-  <!-- Note Modal -->
-  <div id="note-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>ADD NEW NOTE</h3>
-        <span class="close-btn"><i class="fas fa-times"></i></span>
-      </div>
-      <div class="modal-body">
-        <div class="slider-container">
-          <label>TIME <span id="time-value">0</span></label>
-          <input type="range" id="time-slider" min="0" max="15" value="0">
-          <div class="slider-ticks">
-            <div class="tick">0</div>
-            <div class="tick">4</div>
-            <div class="tick">8</div>
-            <div class="tick">12</div>
-            <div class="tick">15</div>
-          </div>
-        </div>
-        
-        <div class="slider-container">
-          <label>PITCH <span id="pitch-value">C1</span></label>
-          <input type="range" id="pitch-slider" min="0" max="27" value="14">
-          <div class="pitch-visual">
-            <div class="keyboard-wrapper">
-              <div class="keyboard-visual"></div>
-            </div>
-          </div>
-        </div>
-        
-        <button id="add-note-btn" class="modal-btn">
-          <i class="fas fa-plus"></i> ADD NOTE
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Main 3D Scene -->
   <div id="three-container"></div>
-  <div id="p5-container"></div>
 
-  <!-- Controls -->
   <div class="controls">
-    <div id="play-button"></div>
-    <div id="tempo-control">
-      <span><i class="fas fa-sliders-h"></i> TEMPO</span>
-      <div id="tempo-slider"></div>
-      <div class="tempo-value">80 BPM</div>
-    </div>
-    <div id="random-note">
-      <button id="random-btn" class="random-btn">
-        <i class="fas fa-dice"></i> RANDOM
-      </button>
-    </div>
+    <button id="play-button">PLAY</button>
+    <input type="range" id="tempo-slider" min="40" max="240" value="80">
+    <button id="random-note">PLANT A RANDOM NOTE</button>
   </div>
 
   <script src="/js/garden.js"></script>
-  <script>
-    setup();
-  </script>
 </body>
 </html>
