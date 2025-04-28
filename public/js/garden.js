@@ -39,16 +39,45 @@ function setup() {
 }
 
 function loadPlantModels() {
-  loader.load('/3dassets/lowpoly_indoor_potted_plant.glb', (gltf) => {
-    plantsArray = gltf.scene.children[0].children[0].children[0].children;
+  // Load pack1
+  loader.load('/3dassets/pack1.glb', (gltf) => {
+    const pack1Plants = gltf.scene.children[0].children[0].children[0].children;
     
-    console.log('Plants loaded:', plantsArray.length);
-    
-    for (let i = 0; i < 5; i++) {
-      addRandomNote();
+    // Add plants with scale metadata
+    for (let plant of pack1Plants) {
+      plantsArray.push({
+        model: plant,
+        scale: 1.5
+      });
     }
+    
+    console.log('Pack1 plants loaded:', pack1Plants.length);
+    
+    // Load pack2
+    loader.load('/3dassets/pack2.glb', (gltf) => {
+      const pack2Plants = gltf.scene.children[0].children[0].children[0].children;
+      
+      // Add plants with scale metadata
+      for (let plant of pack2Plants) {
+        plantsArray.push({
+          model: plant,
+          scale: 2.3
+        });
+      }
+      
+      console.log('Pack2 plants loaded:', pack2Plants.length);
+      console.log('Total plants loaded:', plantsArray.length);
+      
+      // Add some random notes after all plants are loaded
+      for (let i = 0; i < 5; i++) {
+        addRandomNote();
+      }
+    }, undefined, (error) => {
+      console.error('Error loading pack2 GLTF model:', error);
+    });
+    
   }, undefined, (error) => {
-    console.error('Error loading GLTF model:', error);
+    console.error('Error loading pack1 GLTF model:', error);
   });
 }
 
@@ -133,7 +162,8 @@ function addRandomNote() {
 
 function createPlant(track, step) {
   const randomPlantIndex = Math.floor(Math.random() * plantsArray.length);
-  const selectedPlant = plantsArray[randomPlantIndex].clone();
+  const selectedPlantData = plantsArray[randomPlantIndex];
+  const selectedPlant = selectedPlantData.model.clone();
 
   selectedPlant.traverse((child) => {
     if (child.isMesh) {
@@ -148,12 +178,14 @@ function createPlant(track, step) {
   });
   
   // Calculate position
-  const radius = 5 + Math.random() * 3;
+  const radius = 5 + Math.random() * 7; // 还是会撞车！！
   const angle = (step / nSteps) * Math.PI * 2;
   const x = Math.cos(angle) * radius;
   const z = Math.sin(angle) * radius;
 
-  selectedPlant.scale.set(1.5, 1.5, 1.5);
+  // Apply scale from the plant data
+  const plantScale = selectedPlantData.scale;
+  selectedPlant.scale.set(plantScale, plantScale, plantScale);
   selectedPlant.position.set(x, 0, z);
   
   // Store track and step information
