@@ -17,10 +17,21 @@ const loader = new THREE.GLTFLoader();
 let plantsArray = [];
 
 const player = new Tone.Sampler({
-  "A1": "/samples/casio/A1.mp3",
-  "C2": "/samples/casio/C2.mp3",
-  "E2": "/samples/casio/E2.mp3",
-  "G2": "/samples/casio/G2.mp3"
+  "C2": "/samples/melody/SO_CG_guzheng_note_low_E.wav",
+  "E2": "/samples/melody/SO_CG_guzheng_note_midlow_E.wav",
+  "G2": "/samples/melody/SO_CG_guzheng_note_midlow_G.wav",
+  "A2": "/samples/melody/SO_CG_guzheng_note_midlow_A.wav",
+  "C3": "/samples/melody/SO_CG_guzheng_note_mid_D.wav",
+  "D3": "/samples/melody/SO_CG_guzheng_note_midhigh_D.wav",
+  "E3": "/samples/melody/SO_CG_guzheng_note_midhigh_E.wav",
+  "G3": "/samples/melody/SO_CG_guzheng_note_midhigh_G.wav",
+  "A3": "/samples/melody/SO_CG_guzheng_note_midhigh_A.wav",
+  "B3": "/samples/melody/SO_CG_guzheng_note_midhigh_B.wav",
+  "C4": "/samples/melody/SO_CG_guzheng_note_high_D.wav",
+  "E4": "/samples/melody/SO_CG_guzheng_note_high_E.wav",
+  "G4": "/samples/melody/SO_CG_guzheng_note_high_G.wav",
+  "A4": "/samples/melody/SO_CG_guzheng_note_high_A.wav",
+  "B4": "/samples/melody/SO_CG_guzheng_note_high_B.wav"
 }).toDestination();
 
 Tone.Transport.scheduleRepeat(onBeat, "16n");
