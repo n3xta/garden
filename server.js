@@ -41,6 +41,9 @@ app.get("/debug", (req, res) => {
   res.render('debug.ejs');
 });
 
+app.get("/index", (req, res) => {
+  res.render('index.ejs');
+});
 
 // Create new garden route
 app.post("/saveGarden", (req, res) => {

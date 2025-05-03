@@ -81,7 +81,7 @@ function loadPlantModels() {
       console.log('Total plants loaded:', plantsArray.length);
       
       // Add some random notes after all plants are loaded
-      for (let i = 0; i < 50; i++) {
+      for (let i = 0; i < 15; i++) {
         addRandomNote();
       }
     }, undefined, (error) => {
