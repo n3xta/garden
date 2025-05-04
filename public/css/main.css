@@ -87,4 +87,15 @@ body {
 
 .bookmark.explore:hover {
   transform: rotate(105deg) scale(1.1) translateX(-5vh);
+}
+
+/* Logout bookmark positioning */
+.bookmark.logout {
+  top: -1vh;
+  left: 0vh;
+  transform: rotate(277deg);
+}
+
+.bookmark.logout:hover {
+  transform: rotate(285deg) scale(1.1) translateX(-5vh);
 } 

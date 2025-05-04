@@ -107,3 +107,32 @@ input[type="range"]::-moz-range-thumb {
   border: none;
   cursor: pointer;
 }
+
+/* Back button and Explore button styles */
+.back-button {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  width: 25vh;
+  z-index: 10;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.back-button:hover {
+  transform: scale(1.05);
+}
+
+.explore-button {
+  position: fixed;
+  top: 20px;
+  right: -20vh;
+  width: 40vh;
+  z-index: 10;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.explore-button:hover {
+  right: 0;
+}

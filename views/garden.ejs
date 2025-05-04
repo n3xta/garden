@@ -15,6 +15,16 @@
 </head>
 
 <body>
+  <!-- Back to Home button in the top left corner -->
+  <a href="/">
+    <img src="/2dassets/back.png" class="back-button" alt="Back to Home">
+  </a>
+  
+  <!-- Explore button -->
+  <a href="/explore">
+    <img src="/2dassets/explore.png" class="explore-button" alt="Explore">
+  </a>
+
   <div id="three-container"></div>
 
   <div class="controls">
@@ -31,6 +41,12 @@
 
   <!-- fix -->
 
+  <!-- Inject garden data from server -->
+  <script>
+    const initialGardenData = <%- JSON.stringify(gardenData || { plants: [], tempo: 80 }) %>;
+  </script>
+
   <script src="/js/garden.js"></script>
+
 </body>
 </html>

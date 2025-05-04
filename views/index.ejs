@@ -6,37 +6,93 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="/css/main.css">
   <style>
-    .hidden-form {
+    .welcome-message {
+      position: fixed;
+      top: 48%;
+      left: 48%;
+      transform: translate(-50%, -50%);
+      z-index: 0;
+      font-family: 'PPPangaia', sans-serif;
+      font-size: 3rem;
+      color: white;
+      text-align: center;
       display: none;
+      will-change: transform;
+    }
+    
+    .welcome-message .username {
+      font-weight: bold;
+      display: block;
+      font-size: 4rem;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
   <div class="background"></div>
-  <img src="/2dassets/letter.png" class="letter" alt="Letter">
+  <% if (user) { %>
+    <div class="welcome-message" style="display: block;">
+      welcome, <span class="username"><%= user.username %></span>
+    </div>
+  <% } else { %>
+    <img src="/2dassets/letter.png" class="letter" alt="Letter">
+  <% } %>
   
-  <!-- Bookmarks in top left corner -->
-  <a href="/login">
-    <img src="/2dassets/login.png" class="bookmark login" alt="Login">
-  </a>
-  <a href="/register">
-    <img src="/2dassets/signup.png" class="bookmark signup" alt="Sign Up">
-  </a>
+  <!-- Auth bookmarks -->
+  <div class="auth-bookmarks">
+    <% if (!user) { %>
+      <!-- Login/Signup bookmarks (shown when logged out) -->
+      <a href="/login" class="bookmark-link login-link">
+        <img src="/2dassets/login.png" class="bookmark login" alt="Login">
+      </a>
+      <a href="/register" class="bookmark-link signup-link">
+        <img src="/2dassets/signup.png" class="bookmark signup" alt="Sign Up">
+      </a>
+    <% } else { %>
+      <!-- Logout bookmark (shown when logged in) -->
+      <a href="/logout" class="bookmark-link logout-link">
+        <img src="/2dassets/logout.png" class="bookmark logout" alt="Logout">
+      </a>
+    <% } %>
+  </div>
   
   <!-- Bookmarks in bottom right corner -->
-  <!-- Your Garden bookmark now submits a form to saveGarden -->
-  <a href="#" onclick="document.getElementById('createGardenForm').submit(); return false;">
-    <img src="/2dassets/your_garden.png" class="bookmark garden" alt="Your Garden">
-  </a>
-  <form id="createGardenForm" class="hidden-form" action="/saveGarden" method="POST">
-    <input type="hidden" name="owner" value="Anonymous">
-    <input type="hidden" name="gardenName" value="Untitled Garden">
-  </form>
-  
+  <% if (user) { %>
+    <a href="/mygarden">
+      <img src="/2dassets/your_garden.png" class="bookmark garden" alt="Your Garden">
+    </a>
+  <% } else { %>
+     <a href="#" onclick="document.getElementById('createGardenForm').submit(); return false;">
+       <img src="/2dassets/your_garden.png" class="bookmark garden" alt="Your Garden">
+     </a>
+     <form id="createGardenForm" style="display: none;" action="/saveGarden" method="POST">
+       <input type="hidden" name="owner" value="Anonymous">
+       <input type="hidden" name="gardenName" value="Untitled Garden">
+     </form>
+  <% } %>
+
   <a href="/explore">
     <img src="/2dassets/explore.png" class="bookmark explore" alt="Explore">
   </a>
   
   <script src="/js/main.js"></script>
+  <script>
+    document.addEventListener('mousemove', function(e) {
+      const letter = document.querySelector('.letter');
+      const welcomeMessage = document.querySelector('.welcome-message');
+      
+      const mouseX = e.clientX;
+      const mouseY = e.clientY;
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      const offsetX = (mouseX - centerX) / 50;
+      const offsetY = (mouseY - centerY) / 50;
+      
+      const elementToMove = letter || welcomeMessage;
+      if (elementToMove) {
+         elementToMove.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
+      }
+    });
+  </script>
 </body>
 </html>

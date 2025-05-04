@@ -1,11 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - The Garden is a Loop</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/auth.css"> <!-- Link to new CSS -->
+</head>
 <body>
-    <div class="form-container">
-        <h1>login</h1>
-        <form method="POST" action="/authenticate">
-            <input type="text" name="username" placeholder="username">
-            <input type="password" name="password" placeholder="password">
-            <input type="submit" name="submitbutton" value="login" class="submit-btn">      
+  <div class="background"></div>
+
+  <div class="form-wrapper show-form"> <!-- Keep wrapper visible -->
+    <div class="form-container login-form">
+      <!-- Removed close button -->
+      <img src="/2dassets/login_form.png" class="form-image show-image" alt="Login Form"> <!-- Keep image visible -->
+      <div class="input-overlay show-inputs"> <!-- Keep inputs visible -->
+        <form id="login-form" method="POST" action="/authenticate"> 
+            <!-- Display error message if passed from server -->
+            <% if (typeof error !== 'undefined' && error) { %>
+                <p class="error-message"><%= error %></p>
+            <% } %>
+          <input type="text" name="username" placeholder="username" class="username-field" required>
+          <input type="password" name="password" placeholder="password" required>
+          <input type="submit" name="submitbutton" value="login" class="submit-btn">
         </form>
+        <a href="/register" class="form-link signup-link">Don't have an account? Sign up</a>
+      </div>
     </div>
-    <a href="/register"> Don't have an account? Register here.</a>
+  </div>
+
+  <!-- Add link back to home? -->
+  <a href="/" style="position: fixed; top: 20px; left: 20px; color: white; text-decoration: none; z-index: 1001;">Home</a>
+
 </body>
+</html>

@@ -1,19 +1,35 @@
-<div class="form-container">
-    <h1> Register for a new account!</h1>
-    <form method="POST" action="/signup" enctype="multipart/form-data">
-        <div class="register-content-container">
-            <input type="text" name="fullname" placeholder="your full name" class="login-full-name">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Register - The Garden is a Loop</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/auth.css"> 
+</head>
+<body>
+  <div class="background"></div>
 
-            <input type="text" name="username" placeholder="choose a username" class="login-username">
+  <div class="form-wrapper show-form">
+    <div class="form-container signup-form">
+      <img src="/2dassets/signup_form.png" class="form-image show-image" alt="Signup Form">
+      <div class="input-overlay show-inputs">
+        <form id="signup-form" method="POST" action="/register">
+           <!-- Display error message if passed from server -->
+            <% if (typeof error !== 'undefined' && error) { %>
+                <p class="error-message"><%= error %></p>
+            <% } %>
+          <input type="text" name="username" placeholder="choose a username" required>
+          <input type="password" name="password" placeholder="choose a password" required>
+          <input type="password" name="confirmpassword" placeholder="confirm password" required>
+          <input type="submit" name="submitbutton" value="sign up" class="submit-btn">
+        </form>
+        <a href="/login" class="form-link login-link">Already have an account? Login</a>
+      </div>
+    </div>
+  </div>
 
-            <input type="password" name="password" placeholder="choose a password" class="login-password">
+  <!-- Add link back to home? -->
+  <a href="/" style="position: fixed; top: 20px; left: 20px; color: white; text-decoration: none; z-index: 1001;">Home</a>
 
-            <div class='pfp-container'>
-                <label for="fileUpload" class="custom-file-upload"> upload profile picture </label>
-                
-                <input type="file" id="fileUpload" name="profilePicture">
-            </div>
-            <input type="submit" name="submitbutton" value="make my account!" class="submit-btn">
-        </div>
-    </form>
-</div>
+</body>
+</html>
