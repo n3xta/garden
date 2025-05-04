@@ -56,7 +56,8 @@
   <!-- Store garden data in a hidden element -->
   <div id="garden-data" style="display: none;" 
        data-garden='<%- JSON.stringify(gardenData || { plants: [], tempo: 80 }) %>'
-       data-readonly='<%= locals.isReadOnly ? "true" : "false" %>'></div>
+       data-readonly='<%= locals.isReadOnly ? "true" : "false" %>'
+       data-background-id='<%= locals.backgroundId || "" %>'></div>
   
   <!-- Retrieve garden data with regular JavaScript -->
   <script>
@@ -68,6 +69,8 @@
   <!-- Saved Notification -->
   <div id="save-notification" class="save-notification">Saved!</div>
 
+  <!-- 引入背景处理脚本 -->
+  <script src="/js/garden-background.js"></script>
   <script src="/js/garden.js"></script>
 
 </body>

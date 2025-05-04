@@ -31,6 +31,11 @@ app.set("view engine", "ejs"); // attach ejs as templating engine
 // Middleware to parse JSON bodies
 app.use(express.json()); 
 
+// 为用户分配背景ID（1-41）
+function assignBackgroundId() {
+  return Math.floor(Math.random() * 41) + 1;
+}
+
 // default route - home page showing recent gardens
 app.get("/", (request, response) => {
   // Determine user state from session
@@ -124,6 +129,9 @@ app.post("/register", urlEncodedParser, (req, res) => {
       return res.render('register.ejs', { error: "Username already exists" });
     }
     
+    // 为新用户分配背景ID
+    const backgroundId = assignBackgroundId();
+    
     // Create new user
     const newUser = {
       username,
@@ -132,7 +140,8 @@ app.post("/register", urlEncodedParser, (req, res) => {
       garden: { // Add default empty garden structure
         plants: [], 
         tempo: 80
-      }
+      },
+      backgroundId: backgroundId // 保存用户的背景ID
     };
     
     database.insert(newUser, (err, user) => {
@@ -178,6 +187,18 @@ app.get("/mygarden", (req, res) => {
       return res.redirect("/login");
     }
 
+    // 如果用户没有背景ID，分配一个并保存
+    if (!user.backgroundId) {
+      const backgroundId = assignBackgroundId();
+      database.update({ _id: userId }, { $set: { backgroundId: backgroundId } }, {}, (updateErr, numReplaced) => {
+        if (updateErr) {
+          console.error("Error updating user with background ID:", updateErr);
+          // 继续处理，使用默认背景
+        }
+      });
+      user.backgroundId = backgroundId; // 更新当前用户对象
+    }
+
     // Check if the user has a garden object. If not, create and save a default one.
     if (!user.garden) {
       console.log(`User ${user.username} (${userId}) missing garden data. Creating default.`);
@@ -196,14 +217,16 @@ app.get("/mygarden", (req, res) => {
         // Render the garden page with the newly created default garden data
         res.render('garden.ejs', { 
           user: { username: req.session.username }, // Pass username from session
-          gardenData: defaultGarden // Pass the default garden data
+          gardenData: defaultGarden, // Pass the default garden data
+          backgroundId: user.backgroundId // 传递背景ID
         });
       });
     } else {
       // User has garden data, render the garden page with it
       res.render('garden.ejs', { 
         user: { username: req.session.username }, // Pass username from session
-        gardenData: user.garden // Pass the user's garden data
+        gardenData: user.garden, // Pass the user's garden data
+        backgroundId: user.backgroundId // 传递背景ID
       });
     }
   });
@@ -325,22 +348,38 @@ app.post("/api/garden", (req, res) => { // No need for express.json() here if ap
     }
     // Optional: Add deeper validation (e.g., check plant structure)
 
-    // 3. Update the user's document in the database
-    database.update({ _id: userId }, { $set: { garden: gardenState } }, {}, (err, numReplaced) => {
+    // 3. 查找用户以获取现有的backgroundId
+    database.findOne({ _id: userId }, (err, user) => {
         if (err) {
-            console.error(`Database error saving garden for user ${userId}:`, err);
-            return res.status(500).json({ message: "Server error saving garden." });
+            console.error(`Database error finding user ${userId}:`, err);
+            return res.status(500).json({ message: "Server error finding user data." });
         }
 
-        if (numReplaced === 0) {
-            // User document not found (shouldn't happen if session is valid)
-            console.error(`Failed to save garden, user not found: ${userId}`);
+        if (!user) {
+            console.error(`User not found: ${userId}`);
             return res.status(404).json({ message: "User not found." });
         }
 
-        console.log(`Garden manually saved for user ${req.session.username} (${userId})`);
-        // 4. Send success JSON response
-        res.status(200).json({ message: "Garden saved successfully!" }); 
+        // 确保不会覆盖现有背景ID
+        const backgroundId = user.backgroundId || assignBackgroundId();
+
+        // 3. Update the user's document in the database
+        database.update({ _id: userId }, { $set: { garden: gardenState, backgroundId: backgroundId } }, {}, (err, numReplaced) => {
+            if (err) {
+                console.error(`Database error saving garden for user ${userId}:`, err);
+                return res.status(500).json({ message: "Server error saving garden." });
+            }
+
+            if (numReplaced === 0) {
+                // User document not found (shouldn't happen if session is valid)
+                console.error(`Failed to save garden, user not found: ${userId}`);
+                return res.status(404).json({ message: "User not found." });
+            }
+
+            console.log(`Garden manually saved for user ${req.session.username} (${userId})`);
+            // 4. Send success JSON response
+            res.status(200).json({ message: "Garden saved successfully!" }); 
+        });
     });
 });
 
@@ -433,7 +472,8 @@ app.get("/view/:id", (req, res) => {
       user: { username: userData.username }, // Show garden owner's username
       gardenData: userData.garden, // Pass the garden data
       isReadOnly: true, // Set read-only flag
-      visitorName: user ? user.username : null // Pass visitor name if logged in
+      visitorName: user ? user.username : null, // Pass visitor name if logged in
+      backgroundId: userData.backgroundId // 传递背景ID
     });
   });
 });

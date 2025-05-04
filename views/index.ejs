@@ -68,23 +68,5 @@
   </a>
   
   <script src="/js/main.js"></script>
-  <script>
-    document.addEventListener('mousemove', function(e) {
-      const letter = document.querySelector('.letter');
-      const welcomeMessage = document.querySelector('.welcome-message');
-      
-      const mouseX = e.clientX;
-      const mouseY = e.clientY;
-      const centerX = window.innerWidth / 2;
-      const centerY = window.innerHeight / 2;
-      const offsetX = (mouseX - centerX) / 50;
-      const offsetY = (mouseY - centerY) / 50;
-      
-      const elementToMove = letter || welcomeMessage;
-      if (elementToMove) {
-         elementToMove.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
-      }
-    });
-  </script>
 </body>
 </html>

@@ -1,26 +1,32 @@
 document.addEventListener('DOMContentLoaded', () => {
   const background = document.querySelector('.background');
-  
-  document.addEventListener('mousemove', (e) => {
-    const mouseX = e.clientX / window.innerWidth;
-    const mouseY = e.clientY / window.innerHeight;
-    
-    const moveX = 20 * mouseX;
-    const moveY = 20 * mouseY;
-    
-    background.style.transform = `translate(${moveX}px, ${moveY}px)`;
-  });
-  
   const letter = document.querySelector('.letter');
+  const welcomeMessage = document.querySelector('.welcome-message');
+  
+  const BACKGROUND_MOVEMENT_FACTOR = 20;
+  const FOREGROUND_MOVEMENT_FACTOR = 50;
   
   document.addEventListener('mousemove', (e) => {
-    const mouseX = e.clientX / window.innerWidth;
-    const mouseY = e.clientY / window.innerHeight;
+    // Move background effect
+    if (background) {
+      const mouseXRatio = e.clientX / window.innerWidth;
+      const mouseYRatio = e.clientY / window.innerHeight;
+      
+      const moveX = BACKGROUND_MOVEMENT_FACTOR * mouseXRatio;
+      const moveY = BACKGROUND_MOVEMENT_FACTOR * mouseYRatio;
+      
+      background.style.transform = `translate(${moveX}px, ${moveY}px)`;
+    }
     
-    const moveX = 40 * mouseX;
-    const moveY = 40 * mouseY;
-    
-    letter.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
+    // Move letter or welcome message
+    const elementToMove = letter || welcomeMessage;
+    if (elementToMove) {
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      const offsetX = (e.clientX - centerX) / FOREGROUND_MOVEMENT_FACTOR;
+      const offsetY = (e.clientY - centerY) / FOREGROUND_MOVEMENT_FACTOR;
+      
+      elementToMove.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
+    }
   });
-
 }); 

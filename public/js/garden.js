@@ -554,7 +554,7 @@ function manualSaveGarden() {
     const gardenState = getCurrentGardenState(); // Reuse existing function
     console.log("Manually saving garden state:", gardenState);
 
-    fetch('/save-garden', { // Use a new endpoint for manual save
+    fetch('/api/garden', { // 使用正确的API路径
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
