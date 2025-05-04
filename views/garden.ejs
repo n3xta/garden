@@ -26,34 +26,43 @@
     <img src="/2dassets/explore.png" class="explore-button" alt="Explore">
   </a>
 
-  <!-- Save button -->
+  <!-- Save button (only show if not in read-only mode) -->
+  <% if (!locals.isReadOnly) { %>
   <a href="#" id="save-button">
     <img src="/2dassets/save.png" class="save-button" alt="Save Garden">
   </a>
+  <% } %>
+
+  <!-- Read-only mode banner (only show in read-only mode) -->
+  <% if (locals.isReadOnly) { %>
+  <div class="readonly-banner">
+    <p>Viewing <strong><%= user.username %>'s</strong> garden</p>
+    <% if (locals.visitorName) { %>
+    <a href="/mygarden" class="my-garden-link">Back to My Garden</a>
+    <% } %>
+  </div>
+  <% } %>
 
   <div id="three-container"></div>
 
   <div class="controls">
     <button id="play-button">PLAY</button>
     <input type="range" id="tempo-slider" min="40" max="240" value="80">
+    <% if (!locals.isReadOnly) { %>
     <button id="random-note">PLANT A RANDOM NOTE</button>
+    <% } %>
   </div>
 
-  <!-- <div class="return-button">
-    <a href="/index">
-      <img src="/2dassets/signup.png" alt="Return">
-    </a>
-  </div> --> 
-
-  <!-- fix -->
-
   <!-- Store garden data in a hidden element -->
-  <div id="garden-data" style="display: none;" data-garden='<%- JSON.stringify(gardenData || { plants: [], tempo: 80 }) %>'></div>
+  <div id="garden-data" style="display: none;" 
+       data-garden='<%- JSON.stringify(gardenData || { plants: [], tempo: 80 }) %>'
+       data-readonly='<%= locals.isReadOnly ? "true" : "false" %>'></div>
   
   <!-- Retrieve garden data with regular JavaScript -->
   <script>
     const gardenDataElement = document.getElementById('garden-data');
     const initialGardenData = JSON.parse(gardenDataElement.getAttribute('data-garden'));
+    const isReadOnly = gardenDataElement.getAttribute('data-readonly') === 'true';
   </script>
 
   <!-- Saved Notification -->

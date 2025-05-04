@@ -309,7 +309,7 @@ app.get('/garden/:id', (req, res) => {
 */
 
 // NEW: Route for manual garden saving
-app.post("/save-garden", (req, res) => { // No need for express.json() here if applied globally above
+app.post("/api/garden", (req, res) => { // No need for express.json() here if applied globally above
     // 1. Check if user is logged in
     if (!req.session.userId) {
         return res.status(401).json({ message: "Unauthorized: Please log in to save." });
@@ -344,63 +344,97 @@ app.post("/save-garden", (req, res) => { // No need for express.json() here if a
     });
 });
 
-// API route to save garden data for the logged-in user
-app.post("/api/savegarden", express.json(), (req, res) => { // Use express.json() for parsing JSON body
-  // Check if user is logged in via session
-  if (!req.session.userId) {
-    return res.status(401).send("Unauthorized: Please log in.");
-  }
-
-  const userId = req.session.userId;
-  const gardenData = req.body.gardenData; // Expecting data in { gardenData: { plants: [...], tempo: ... } }
-
-  // Basic validation of garden data (can be expanded)
-  if (!gardenData || typeof gardenData !== 'object') {
-      return res.status(400).send("Invalid garden data format.");
-  }
-  // You might want to add more specific validation for plants array, tempo, etc.
-
-  // Update the user's garden field in the database
-  database.update({ _id: userId }, { $set: { garden: gardenData } }, {}, (err, numReplaced) => {
+// NEW: API endpoint to fetch all gardens
+app.get("/api/gardens", (req, res) => {
+  // Find all users with garden data
+  database.find({ garden: { $exists: true } }, { username: 1, garden: 1, createdAt: 1 }, (err, users) => {
     if (err) {
-      console.error("Database error updating garden:", err);
-      return res.status(500).send("Server error saving garden.");
+      console.error("Database error fetching gardens:", err);
+      return res.status(500).json({ error: "Error loading gardens" });
     }
     
-    if (numReplaced === 0) {
-      // This could happen if the user was deleted between login and save
-      console.error("Failed to save garden, user not found:", userId);
-      return res.status(404).send("User not found.");
+    // Transform the data to include only what's needed
+    const gardens = users.map(user => ({
+      id: user._id,
+      username: user.username,
+      gardenName: user.gardenName || "Untitled Garden", // Default name
+      createdAt: user.createdAt,
+      plantsCount: user.garden.plants.length,
+      tempo: user.garden.tempo,
+      thumbnail: `/api/gardens/${user._id}/thumbnail` // Placeholder for future thumbnail URL
+    }));
+    
+    res.json(gardens);
+  });
+});
+
+// NEW: API endpoint to fetch a specific garden
+app.get("/api/gardens/:id", (req, res) => {
+  const userId = req.params.id;
+  
+  database.findOne({ _id: userId }, (err, user) => {
+    if (err) {
+      console.error("Database error fetching garden:", err);
+      return res.status(500).json({ error: "Server error" });
     }
     
-    console.log(`Garden saved for user ${userId}`);
-    res.sendStatus(200); // Send OK status
+    if (!user || !user.garden) {
+      return res.status(404).json({ error: "Garden not found" });
+    }
+    
+    // Return garden data with owner info
+    const gardenData = {
+      id: user._id,
+      username: user.username,
+      gardenName: user.gardenName || "Untitled Garden",
+      createdAt: user.createdAt,
+      garden: user.garden
+    };
+    
+    res.json(gardenData);
   });
 });
 
 // Explore gardens page
 app.get("/explore", (req, res) => {
-  // getting the term from the form if provided
-  let searchTerm = req.query.searchTerm;
-  let query = {};
-
-  if (searchTerm) {
-    // Using regex to search in owner or gardenName fields
-    query = {
-      $or: [
-        { owner: new RegExp(searchTerm, 'i') },
-        { gardenName: new RegExp(searchTerm, 'i') }
-      ]
-    };
+  // Determine user state from session
+  let user = null;
+  if (req.session.userId && req.session.username) {
+    user = { username: req.session.username }; // Use username from session
   }
+  
+  // We'll fetch gardens client-side via the new API
+  res.render('explore.ejs', { user: user });
+});
 
-  // find all gardens matching the query, sorted by creation date (newest first)
-  database.find(query).sort({ timestamp: -1 }).exec((err, results) => {
+// NEW: View a specific garden in read-only mode
+app.get("/view/:id", (req, res) => {
+  const gardenId = req.params.id;
+  
+  // Check if user is logged in (optional, just to show username in navbar)
+  let user = null;
+  if (req.session.userId && req.session.username) {
+    user = { username: req.session.username };
+  }
+  
+  // Find the garden by user ID
+  database.findOne({ _id: gardenId }, (err, userData) => {
     if (err) {
-      console.error("Error exploring gardens:", err);
-      return res.status(500).send("Error loading gardens");
+      console.error("Database error:", err);
+      return res.status(500).send("Server error");
     }
-    res.render('explore.ejs', {gardens: results});
+    
+    if (!userData || !userData.garden) {
+      return res.status(404).send("Garden not found");
+    }
+    
+    // Render garden.ejs with read-only flag
+    res.render('garden.ejs', { 
+      user: { username: userData.username }, // Show garden owner's username
+      gardenData: userData.garden, // Pass the garden data
+      isReadOnly: true, // Set read-only flag
+      visitorName: user ? user.username : null // Pass visitor name if logged in
+    });
   });
 });
 

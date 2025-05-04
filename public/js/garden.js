@@ -73,6 +73,11 @@ function setup() {
     initializeGardenFromData();
   });
   initEvents();
+  
+  // Apply read-only mode restrictions if needed
+  if (isReadOnly) {
+    applyReadOnlyMode();
+  }
 }
 
 function initializeGardenFromData() {
@@ -452,18 +457,22 @@ function animatePlant(track, step) {
 
 function initEvents() {
   playButton.addEventListener('click', togglePlay);
-  randomButton.addEventListener('click', addRandomNote);
-  tempoSlider.addEventListener('input', updateTempo);
-  renderer.domElement.addEventListener('click', onDocumentMouseClick, false);
-  window.addEventListener('keydown', onDocumentKeyDown, false);
   
-  saveButton.addEventListener('click', (event) => { // Add listener for new save button
-      event.preventDefault(); // Prevent default link behavior
+  // Only add these event listeners if not in read-only mode
+  if (!isReadOnly) {
+    randomButton.addEventListener('click', addRandomNote);
+    tempoSlider.addEventListener('input', updateTempo);
+    renderer.domElement.addEventListener('click', onDocumentMouseClick, false);
+    window.addEventListener('keydown', onDocumentKeyDown, false);
+    
+    saveButton.addEventListener('click', (event) => {
+      event.preventDefault();
       manualSaveGarden(); 
-  }); 
-
-  // Remove the automatic save on beforeunload
-  // window.addEventListener('beforeunload', saveGardenData); 
+    });
+  } else {
+    // In read-only mode, tempo slider should be disabled but still show value
+    tempoSlider.disabled = true;
+  }
 }
 
 async function togglePlay() {
@@ -580,7 +589,8 @@ function showSaveNotification() {
 }
 
 function onDocumentMouseClick(event) {
-  if (isEditing) return;
+  // Disable plant editing in read-only mode
+  if (isReadOnly || isEditing) return;
 
   event.preventDefault();
 
@@ -916,4 +926,21 @@ function updateCameraAnimation() {
         }
         controls.update();
     }
+}
+
+function applyReadOnlyMode() {
+  console.log('Applying read-only mode restrictions');
+  
+  // Hide any editing UI elements
+  if (randomButton) {
+    randomButton.style.display = 'none';
+  }
+  
+  // Make tempo slider read-only
+  if (tempoSlider) {
+    tempoSlider.disabled = true;
+  }
+  
+  // Add a class to body for CSS styling in read-only mode
+  document.body.classList.add('readonly-mode');
 }
