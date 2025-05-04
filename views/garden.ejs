@@ -9,6 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three-gltf-loader@1.111.0/index.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.9/Tone.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/DragControls.js"></script>
 
 
   <link rel="stylesheet" href="/css/garden.css">
@@ -41,9 +42,13 @@
 
   <!-- fix -->
 
-  <!-- Inject garden data from server -->
+  <!-- Store garden data in a hidden element -->
+  <div id="garden-data" style="display: none;" data-garden='<%- JSON.stringify(gardenData || { plants: [], tempo: 80 }) %>'></div>
+  
+  <!-- Retrieve garden data with regular JavaScript -->
   <script>
-    const initialGardenData = <%- JSON.stringify(gardenData || { plants: [], tempo: 80 }) %>;
+    const gardenDataElement = document.getElementById('garden-data');
+    const initialGardenData = JSON.parse(gardenDataElement.getAttribute('data-garden'));
   </script>
 
   <script src="/js/garden.js"></script>

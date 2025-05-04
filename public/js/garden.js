@@ -11,11 +11,26 @@ let scene, camera, renderer, controls;
 let floor;
 let plantedItems = [];
 let floorBuffer;
+let raycaster, mouse;
+let isEditing = false;
+let selectedPlant = null;
+let originalCameraPos, originalControlsTarget;
+let isCameraAnimating = false;
+let targetCameraPos = new THREE.Vector3();
+let targetControlsTarget = new THREE.Vector3();
+let originalAmbientIntensity, originalDirectionalIntensity, originalFog;
+
+// Editor related globals
+const minSize = 0.8;
+const maxSize = 2.5;
+let editHandles = [];
+let dragControls = null;
 
 const loader = new THREE.GLTFLoader();
 let plantsArray = [];
 
-const player = new Tone.Sampler({
+// Define the sample map once
+const sampleMap = {
   "C2": "/samples/melody/SO_CG_guzheng_note_low_E.wav",
   "E2": "/samples/melody/SO_CG_guzheng_note_midlow_E.wav",
   "G2": "/samples/melody/SO_CG_guzheng_note_midlow_G.wav",
@@ -31,7 +46,7 @@ const player = new Tone.Sampler({
   "G4": "/samples/melody/SO_CG_guzheng_note_high_G.wav",
   "A4": "/samples/melody/SO_CG_guzheng_note_high_A.wav",
   "B4": "/samples/melody/SO_CG_guzheng_note_high_B.wav"
-}).toDestination();
+};
 
 Tone.Transport.scheduleRepeat(onBeat, "16n");
 
@@ -62,10 +77,26 @@ function initializeGardenFromData() {
   if (initialGardenData.plants && initialGardenData.plants.length > 0) {
     initialGardenData.plants.forEach(plantData => {
       if (plantData.plantModelIndex !== undefined) { 
-        createPlant(plantData.track, plantData.step, plantData.plantModelIndex);
+        const plant = createPlant(plantData.track, plantData.step, plantData.plantModelIndex);
+        if (plant && plantData.audioParams) {
+            // Apply loaded params to the plant's specific effects
+            if (plant.userData.effects) {
+                plant.userData.effects.filter.frequency.value = plantData.audioParams.filterFreq !== undefined ? plantData.audioParams.filterFreq : 800;
+                plant.userData.effects.chorus.depth.value = plantData.audioParams.chorusDepth !== undefined ? plantData.audioParams.chorusDepth : 0.3;
+                plant.userData.effects.delay.feedback.value = plantData.audioParams.delayFeedback !== undefined ? plantData.audioParams.delayFeedback : 0.3;
+                // Handle old param names if necessary (optional, adds robustness)
+                if (plantData.audioParams.distortion !== undefined) { /* map to chorus/delay? */ }
+                if (plantData.audioParams.reverbTime !== undefined) { /* map to delay? */}
+            } else {
+                console.warn("Plant created but effects object missing during load.");
+            }
+        }
+        if (plant && plantData.scale) {
+            plant.scale.copy(plantData.scale);
+        }
       } else {
           console.warn("Plant data missing model index, creating random plant instead:", plantData);
-          createPlant(plantData.track, plantData.step); 
+          const plant = createPlant(plantData.track, plantData.step); 
       }
     });
   } else {
@@ -173,6 +204,10 @@ function initThree() {
   hemiLight.position.set( 0, 20, 0 );
   scene.add( hemiLight );
 
+  // Initialize raycaster and mouse vector
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+
   floorBuffer = new THREE.Group();
   floorBuffer.position.y = -1.3;
   scene.add(floorBuffer);
@@ -232,7 +267,13 @@ function initThree() {
 
 function animate() {
   requestAnimationFrame(animate);
-  controls.update();
+
+  if (isCameraAnimating) {
+    updateCameraAnimation();
+  } else if (controls.enabled) {
+      controls.update();
+  }
+
   renderer.render(scene, camera);
 }
 
@@ -245,7 +286,11 @@ function onBeat(time) {
       const octave = baseOctave + Math.floor(notePos / 7);
       const noteName = noteNames[notePos % 7];
       const pitch = noteName + octave;
-      player.triggerAttack(pitch, time);
+      if (item.userData.sampler) {
+        item.userData.sampler.triggerAttack(pitch, time);
+      } else {
+        console.warn("Plant has no sampler!", item.userData);
+      }
       animatePlant(track, currentStep);
   });
 
@@ -283,7 +328,7 @@ function addRandomNote() {
 function createPlant(track, step, plantModelIndex) {
   if (plantsArray.length === 0) {
     console.error("Attempted to create plant before models loaded.");
-    return;
+    return null;
   }
   
   let selectedPlantData;
@@ -324,15 +369,34 @@ function createPlant(track, step, plantModelIndex) {
   selectedPlant.scale.set(plantScale, plantScale, plantScale);
   selectedPlant.position.set(x, 0, z);
   
+  // --- Create Sampler and Effects PER PLANT ---
+  const plantSampler = new Tone.Sampler(sampleMap).toDestination(); // Initial connection to destination
+  const plantFilter = new Tone.Filter(800, "lowpass"); // Default freq
+  const plantChorus = new Tone.Chorus(4, 2.5, 0.3).start(); // Default depth
+  const plantDelay = new Tone.FeedbackDelay("8n", 0.3); // Default feedback
+
+  // Chain: Sampler -> Filter -> Chorus -> Delay -> Destination
+  plantSampler.disconnect(Tone.Destination); // Disconnect initial connection
+  plantSampler.chain(plantFilter, plantChorus, plantDelay, Tone.Destination);
+  // --- End Per-Plant Audio Setup ---
+
   selectedPlant.userData = {
     track: track,
     step: step,
     plantModelIndex: plantModelIndex,
     originalY: 0,
+    // Store the sampler and effects instances
+    sampler: plantSampler,
+    effects: {
+        filter: plantFilter,
+        chorus: plantChorus,
+        delay: plantDelay
+    }
   };
   
   scene.add(selectedPlant);
   plantedItems.push(selectedPlant);
+  return selectedPlant;
 }
 
 function animatePlant(track, step) {
@@ -360,6 +424,8 @@ function initEvents() {
   playButton.addEventListener('click', togglePlay);
   randomButton.addEventListener('click', addRandomNote);
   tempoSlider.addEventListener('input', updateTempo);
+  renderer.domElement.addEventListener('click', onDocumentMouseClick, false);
+  window.addEventListener('keydown', onDocumentKeyDown, false);
 
   window.addEventListener('beforeunload', saveGardenData);
 }
@@ -383,11 +449,29 @@ function updateTempo() {
 }
 
 function getCurrentGardenState() {
-    const plantsData = plantedItems.map(item => ({
-        track: item.userData.track,
-        step: item.userData.step,
-        plantModelIndex: item.userData.plantModelIndex
-    }));
+    const plantsData = plantedItems.map(item => {
+        // Read current effect values from the plant's effects objects
+        const currentAudioParams = {};
+        if (item.userData.effects) {
+            currentAudioParams.filterFreq = item.userData.effects.filter.frequency.value;
+            currentAudioParams.chorusDepth = item.userData.effects.chorus.depth.value;
+            currentAudioParams.delayFeedback = item.userData.effects.delay.feedback.value;
+        } else {
+            // Fallback defaults if effects somehow missing
+            console.warn("Plant missing effects during save, using defaults.", item.userData);
+            currentAudioParams.filterFreq = 800;
+            currentAudioParams.chorusDepth = 0.3;
+            currentAudioParams.delayFeedback = 0.3;
+        }
+
+        return {
+            track: item.userData.track,
+            step: item.userData.step,
+            plantModelIndex: item.userData.plantModelIndex,
+            audioParams: currentAudioParams, // Save the read values
+            scale: item.scale.clone()
+        }
+    });
     const currentTempo = parseInt(tempoSlider.value);
     
     return {
@@ -413,5 +497,345 @@ function saveGardenData() {
             body: dataToSend,
             keepalive: true
         }).catch(error => console.error('Error saving garden data with fetch:', error));
+    }
+}
+
+function onDocumentMouseClick(event) {
+  if (isEditing) return;
+
+  event.preventDefault();
+
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+
+  const intersects = raycaster.intersectObjects(plantedItems, true);
+
+  if (intersects.length > 0) {
+    let clickedObject = intersects[0].object;
+    while (clickedObject.parent && !plantedItems.includes(clickedObject)) {
+        clickedObject = clickedObject.parent;
+    }
+
+    if (plantedItems.includes(clickedObject)) {
+        console.log("Clicked on plant:", clickedObject.userData);
+        enterPlantEditor(clickedObject);
+    }
+  }
+}
+
+function enterPlantEditor(plant) {
+  if (isCameraAnimating) return;
+  console.log("Entering editor for plant:", plant.userData);
+  selectedPlant = plant;
+  isEditing = true;
+
+  originalCameraPos = camera.position.clone();
+  originalControlsTarget = controls.target.clone();
+  originalAmbientIntensity = ambientLight.intensity;
+  originalDirectionalIntensity = directionalLight.intensity;
+  originalFog = scene.fog;
+
+  plant.getWorldPosition(targetControlsTarget);
+  const plantSize = new THREE.Box3().setFromObject(plant).getSize(new THREE.Vector3());
+  const cameraDistance = Math.max(plantSize.x, plantSize.y, plantSize.z) * 3 + 3;
+  const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
+  targetCameraPos.copy(targetControlsTarget).addScaledVector(direction, cameraDistance);
+
+  isCameraAnimating = true;
+  controls.enabled = true;
+  controls.enableRotate = false;
+  controls.enableZoom = false;
+  controls.enablePan = false;
+
+  // Create handles and setup DragControls
+  createHandles(selectedPlant);
+  if (editHandles.length > 0) {
+    dragControls = new THREE.DragControls(editHandles, camera, renderer.domElement);
+    dragControls.addEventListener('dragstart', onHandleDragStart);
+    dragControls.addEventListener('drag', onHandleDrag);
+    dragControls.addEventListener('dragend', onHandleDragEnd);
+
+    // --- Dynamic Audio Routing & Effect Creation ---
+    // console.log("Creating temporary effects chain for editing.");
+    // Dispose previous effects if any lingered (safety check)
+    // if (currentEditEffects) { ... }
+    // currentEditEffects = { ... }; // ReferenceError occurs here if uncommented
+
+    // console.log("Connecting player through temporary effects chain.");
+    // player.disconnect(Tone.Destination);
+    // player.chain(currentEditEffects.filter, currentEditEffects.chorus, currentEditEffects.delay, Tone.Destination); // ReferenceError occurs here if uncommented
+
+    // Apply initial audio params to temporary effects *after* connecting // REMOVED
+    // const params = selectedPlant.userData.audioParams; // These params don't exist anymore
+    // currentEditEffects.filter.frequency.value = params.filterFreq; // ReferenceError occurs here if uncommented
+    // currentEditEffects.chorus.depth.value = params.chorusDepth; // ReferenceError occurs here if uncommented
+    // currentEditEffects.delay.feedback.value = params.delayFeedback; // ReferenceError occurs here if uncommented
+
+    // NO audio graph changes needed on enter, plant has its own chain.
+  } else {
+    console.error("Failed to create edit handles.");
+  }
+
+  // TODO: Show editor UI
+}
+
+function exitPlantEditor() {
+  if (!isEditing || isCameraAnimating) return;
+  console.log("Exiting editor mode.");
+
+  // Clean up editor state BEFORE animating back
+  if (dragControls) {
+    dragControls.removeEventListener('dragstart', onHandleDragStart);
+    dragControls.removeEventListener('drag', onHandleDrag);
+    dragControls.removeEventListener('dragend', onHandleDragEnd);
+    dragControls.dispose();
+    dragControls = null;
+  }
+  removeHandles();
+
+  // --- Dynamic Audio Routing & Effect Creation --- REMOVED ---
+  // console.log("Disconnecting effects chain, reconnecting player directly.");
+  // if (selectedPlant && selectedPlant.userData.effects) { ... } // Removed in previous step
+
+  // player.connect(Tone.Destination); // REMOVE THIS LINE - Causes ReferenceError
+
+  // Restore scene immediately
+  ambientLight.intensity = originalAmbientIntensity;
+  directionalLight.intensity = originalDirectionalIntensity;
+  scene.fog = originalFog;
+
+  targetCameraPos.copy(originalCameraPos);
+  targetControlsTarget.copy(originalControlsTarget);
+
+  isCameraAnimating = true;
+  controls.enabled = true;
+  controls.enableRotate = false;
+  controls.enableZoom = false;
+  controls.enablePan = false;
+
+  selectedPlant = null;
+  isEditing = false;
+  console.log("Started exit animation.");
+  // TODO: Hide editor UI immediately
+}
+
+// Placeholder Handle Functions
+function createHandles(object) {
+    removeHandles(); // Clear any previous handles
+
+    const handleSize = 0.15;
+    const handleGeometry = new THREE.BoxGeometry(handleSize, handleSize, handleSize); // Use cubes
+    const colors = { x: 0xff0000, y: 0x00ff00, z: 0x0000ff }; // R, G, B
+    const axes = ['x', 'y', 'z'];
+
+    const bbox = new THREE.Box3().setFromObject(object);
+    const objectSize = bbox.getSize(new THREE.Vector3());
+    const objectCenter = bbox.getCenter(new THREE.Vector3());
+
+    axes.forEach(axis => {
+        const handleMaterial = new THREE.MeshBasicMaterial({ color: colors[axis], transparent: true, opacity: 0.8 });
+        const handle = new THREE.Mesh(handleGeometry, handleMaterial);
+        handle.userData.axis = axis; // Store the axis
+
+        // Position handle along the positive axis direction from the center
+        const position = objectCenter.clone();
+        position[axis] += objectSize[axis] / 2 + handleSize * 2; // Offset from the edge
+        handle.position.copy(position);
+        
+        // TODO: Consider handle rotation for better visual alignment?
+        
+        scene.add(handle);
+        editHandles.push(handle);
+    });
+
+    console.log("Created handles:", editHandles.length);
+}
+
+function removeHandles() {
+    editHandles.forEach(handle => {
+        scene.remove(handle);
+        if (handle.geometry) handle.geometry.dispose();
+        if (handle.material) handle.material.dispose();
+    });
+    editHandles = [];
+    // console.log("Removed handles");
+}
+
+// Placeholder - needs proper implementation based on handle positions
+function updateHandlePositions(object, handles) {
+    if (!handles || handles.length === 0) return;
+    
+    const bbox = new THREE.Box3().setFromObject(object);
+    const objectSize = bbox.getSize(new THREE.Vector3());
+    const objectCenter = bbox.getCenter(new THREE.Vector3());
+    const handleSize = handles[0].geometry.parameters.width; // Assuming all handles are same size cubes
+
+    handles.forEach(handle => {
+        const axis = handle.userData.axis;
+        if (!axis) return;
+        
+        const position = objectCenter.clone();
+        position[axis] += objectSize[axis] / 2 + handleSize * 2; // Same logic as creation
+        handle.position.copy(position);
+    });
+}
+
+// DragControls Event Handlers
+function onHandleDragStart(event) {
+    console.log("Drag Start");
+    controls.enableRotate = false;
+    // Store starting state on the dragged handle
+    event.object.userData.startDragPosition = event.object.position.clone();
+    if (selectedPlant) { // Ensure plant exists
+        event.object.userData.startPlantScale = selectedPlant.scale.clone();
+    }
+}
+
+function onHandleDrag(event) {
+    const dragObject = event.object;
+    if (!selectedPlant || !editHandles.includes(dragObject) || !dragObject.userData.axis || !dragObject.userData.startDragPosition || !dragObject.userData.startPlantScale) {
+        // console.warn("Drag event skipped, missing data");
+        return; // Exit if data wasn't properly initialized in dragStart
+    }
+
+    const axis = dragObject.userData.axis;
+    
+    // Calculate handle's position delta since drag start
+    const currentPosition = dragObject.position;
+    const startPosition = dragObject.userData.startDragPosition;
+    const deltaPosition = currentPosition.clone().sub(startPosition);
+
+    // Simple mapping: Use the delta along the handle's primary axis
+    const displacement = deltaPosition[axis]; 
+    
+    const sensitivity = 3.0; // Adjust sensitivity as needed
+    const scaleChange = displacement * sensitivity;
+
+    // Apply scale change relative to the starting scale
+    const startScaleValue = dragObject.userData.startPlantScale[axis];
+    const newScaleValue = startScaleValue + scaleChange;
+    const clampedScaleValue = Math.max(minSize, Math.min(newScaleValue, maxSize));
+
+    selectedPlant.scale[axis] = clampedScaleValue;
+    
+    // Update handle positions visually based on the new plant scale
+    updateHandlePositions(selectedPlant, editHandles);
+    
+    // --- Override DragControls position --- 
+    // Find the updated position of *this specific* dragged handle
+    const updatedHandleData = editHandles.find(h => h === dragObject);
+    if (updatedHandleData) {
+        // Reset the dragged object's position to where updateHandlePositions placed it.
+        // This prevents DragControls internal logic from fighting our scaling logic.
+        dragObject.position.copy(updatedHandleData.position);
+        // We also need to update the startDragPosition incrementally IF we want smooth continuous dragging
+        // OR reset startDragPosition/startPlantScale each frame (simpler, might feel less smooth)
+        // Let's try resetting each frame for simplicity first:
+        // dragObject.userData.startDragPosition = dragObject.position.clone();
+        // dragObject.userData.startPlantScale = selectedPlant.scale.clone();
+        // -- Alternative: More complex incremental approach needed for perfect smoothness --
+    }
+    // --- End Override --- 
+
+    // Map potentially non-uniform scale to audio parameters
+    const scale = selectedPlant.scale;
+    const freq = map(scale.x, minSize, maxSize, 200, 3000); // X scale -> Filter Frequency
+    const chorDepth = map(scale.y, minSize, maxSize, 0.1, 0.9); // Y scale -> Chorus Depth
+    const delayFb = map(scale.z, minSize, maxSize, 0.1, 0.7); // Z scale -> Delay Feedback
+
+    // Update Tone.js effects in real-time (if they exist)
+    // Apply directly to the selected plant's persistent effects
+    if (selectedPlant && selectedPlant.userData.effects) {
+        selectedPlant.userData.effects.filter.frequency.value = freq;
+        selectedPlant.userData.effects.chorus.depth.value = chorDepth;
+        selectedPlant.userData.effects.delay.feedback.value = delayFb;
+    }
+    // if (currentEditEffects) { ... } // REMOVED - This block caused the ReferenceError
+    // {
+    //     currentEditEffects.filter.frequency.value = freq;
+    //     currentEditEffects.chorus.depth.value = chorDepth; // Update chorus depth
+    //     currentEditEffects.delay.feedback.value = delayFb; // Update delay feedback
+    // }
+
+    // Store current audio params back to userData (so they are saved on exit) // REMOVED - No longer needed, live in effects
+    // Use new parameter names
+    selectedPlant.userData.audioParams = {
+        filterFreq: freq,
+        chorusDepth: chorDepth,
+        delayFeedback: delayFb
+    };
+
+    // Prevent DragControls from moving the handle itself (we reposition it manually)
+    // This might require overriding DragControls update or resetting position here.
+    // For now, updateHandlePositions() might visually correct it.
+}
+
+function onHandleDragEnd(event) {
+    console.log("Drag End");
+    // Clear starting drag data from handle
+    if (event.object.userData) {
+        delete event.object.userData.startPlantScale;
+        delete event.object.userData.startDragPosition; // Clear position too
+    }
+    // Re-enable OrbitControls rotation after handle drag (if still in editor mode)
+    if (isEditing) {
+        controls.enableRotate = true;
+    }
+}
+
+// Utility function for mapping values
+function map(value, inMin, inMax, outMin, outMax) {
+  // Clamp value to input range
+  const clampedValue = Math.max(inMin, Math.min(value, inMax));
+  // Perform linear interpolation
+  return (clampedValue - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+}
+
+function onDocumentKeyDown(event) {
+  if (isEditing && event.key === "Escape") {
+      exitPlantEditor();
+  }
+}
+
+function updateCameraAnimation() {
+    const lerpFactor = 0.07;
+    const positionThreshold = 0.05;
+    const targetThreshold = 0.05;
+
+    camera.position.lerp(targetCameraPos, lerpFactor);
+    controls.target.lerp(targetControlsTarget, lerpFactor);
+    controls.update();
+
+    const positionReached = camera.position.distanceTo(targetCameraPos) < positionThreshold;
+    const targetReached = controls.target.distanceTo(targetControlsTarget) < targetThreshold;
+
+    if (positionReached && targetReached) {
+        isCameraAnimating = false;
+        camera.position.copy(targetCameraPos);
+        controls.target.copy(targetControlsTarget);
+
+        if (isEditing) {
+            controls.enabled = true;
+            controls.enableZoom = false;
+            controls.enablePan = false;
+            controls.enableRotate = true;
+            console.log("Camera animation finished - Editor entered.");
+
+            ambientLight.intensity = 0.1;
+            directionalLight.intensity = 0.2;
+            const fogNear = camera.position.distanceTo(controls.target) * 0.8;
+            const fogFar = fogNear + 15;
+            scene.fog = new THREE.Fog(0x222233, fogNear, fogFar);
+        } else {
+            controls.enabled = true;
+            controls.enableZoom = true;
+            controls.enablePan = true;
+            controls.enableRotate = true;
+            console.log("Camera animation finished - Editor exited.");
+            // TODO: Restore scene / show other plants
+        }
+        controls.update();
     }
 }
