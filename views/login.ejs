@@ -4,32 +4,60 @@
   <meta charset="UTF-8">
   <title>Login - The Garden is a Loop</title>
   <link rel="stylesheet" href="/css/main.css">
-  <link rel="stylesheet" href="/css/auth.css"> <!-- Link to new CSS -->
+  <link rel="stylesheet" href="/css/auth.css">
+  <link rel="stylesheet" href="/css/auth-transition.css">
+  <style>
+    /* Override background for login page to use wood.jpg */
+    .background {
+      background-image: url('/2dassets/wood.jpg') !important;
+      opacity: 1 !important;
+    }
+    
+    /* Hide elements initially for a better transition effect */
+    .form-wrapper {
+      opacity: 0;
+    }
+  </style>
 </head>
 <body>
   <div class="background"></div>
 
-  <div class="form-wrapper show-form"> <!-- Keep wrapper visible -->
+  <div class="form-wrapper show-form">
     <div class="form-container login-form">
-      <!-- Removed close button -->
-      <img src="/2dassets/login_form.png" class="form-image show-image" alt="Login Form"> <!-- Keep image visible -->
-      <div class="input-overlay show-inputs"> <!-- Keep inputs visible -->
-        <form id="login-form" method="POST" action="/authenticate"> 
-            <!-- Display error message if passed from server -->
-            <% if (typeof error !== 'undefined' && error) { %>
-                <p class="error-message"><%= error %></p>
-            <% } %>
-          <input type="text" name="username" placeholder="username" class="username-field" required>
-          <input type="password" name="password" placeholder="password" required>
-          <input type="submit" name="submitbutton" value="login" class="submit-btn">
-        </form>
-        <a href="/register" class="form-link signup-link">Don't have an account? Sign up</a>
+      <div data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-perspective="500" class="tilt-container">
+        <img src="/2dassets/login_form.png" class="form-image show-image" alt="Login Form">
+        <div class="input-overlay show-inputs">
+          <form id="login-form" method="POST" action="/authenticate"> 
+              <% if (typeof error !== 'undefined' && error) { %>
+                  <p class="error-message"><%= error %></p>
+              <% } %>
+            <input type="text" id="login-username" name="username" placeholder="username" class="username-field input-field" required>
+            <input type="password" id="login-password" name="password" placeholder="password" class="password-field input-field" required>
+            <input type="submit" id="login-submit" name="submitbutton" value="login" class="submit-btn">
+          </form>
+          <a href="/register" class="form-link signup-link">Don't have an account? Sign up</a>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Add link back to home? -->
-  <a href="/" style="position: fixed; top: 20px; left: 20px; color: white; text-decoration: none; z-index: 1001;">Home</a>
+  <a href="/" class="home-link">Home</a>
 
+  <script src="/js/auth-transition.js"></script>
+  <script src="/lib/vanilla-tilt.js"></script>
+  <script>
+  // Ensure inputs are properly clickable
+  document.addEventListener('DOMContentLoaded', function() {
+    // Force tilt to reinitialize properly
+    const tiltContainer = document.querySelector('.tilt-container');
+    if (typeof VanillaTilt !== 'undefined' && tiltContainer) {
+      VanillaTilt.init(tiltContainer, {
+        max: 5,
+        speed: 400,
+        perspective: 500
+      });
+    }
+  });
+  </script>
 </body>
 </html>

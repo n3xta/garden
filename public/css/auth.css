@@ -3,6 +3,7 @@
 body {
   /* You might want to inherit from main.css or define base styles */
   font-family: sans-serif;
+  overflow: hidden; /* Prevent scrollbars when forms extend beyond viewport */
 }
 
 .background {
@@ -12,7 +13,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: url('/2dassets/background.png'); /* Ensure path is correct */
+    background-image: url('/2dassets/wood.jpg');
     background-size: cover;
     background-position: center;
     z-index: -1; 
@@ -27,22 +28,32 @@ body {
   display: flex; /* Use flex to center */
   justify-content: center;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.5); /* Optional semi-transparent overlay */
   z-index: 1000;
 }
 
 .form-container {
   position: relative;
-  width: 400px; /* Adjust as needed */
-  height: 500px; /* Adjust as needed */
-  overflow: hidden; /* Hide parts during transition if needed */
+  width: 90vw; /* Smaller than before (was 120vw) */
+  max-width: 550px; /* Reduced from 800px */
+  height: auto;
+  overflow: visible; /* Allow content to extend beyond container */
+  transform-style: preserve-3d;
+}
+
+/* Make sure the tilt div doesn't mess with layout */
+.form-container > div[data-tilt] {
+  width: 100%;
+  height: auto;
+  position: relative;
+  transform-style: preserve-3d;
 }
 
 .form-image {
   width: 100%;
-  height: 100%;
+  height: auto;
   object-fit: contain; /* Or cover, depending on image */
   display: block;
+  will-change: transform; /* Improves performance for tilt effect */
 }
 
 .input-overlay {
@@ -58,20 +69,32 @@ body {
   padding: 20px; /* Add padding */
   box-sizing: border-box;
   text-align: center; 
-  background: rgba(255, 255, 255, 0.1); /* Slight background for inputs if needed */
+  transform-style: preserve-3d; /* Ensure 3D space is preserved */
+  pointer-events: none; /* Allow clicks to pass through to the tilt element */
+}
+
+/* Make form elements clickable */
+.input-overlay form,
+.input-overlay input,
+.input-overlay a,
+.input-overlay button,
+.input-overlay .submit-btn {
+  pointer-events: auto;
+  position: relative; /* Ensure they're above the form image */
+  z-index: 2; /* Higher than form image */
 }
 
 /* Adjust positioning based on your form images */
 .login-form .input-overlay {
   /* Example: slightly different layout for login */
    justify-content: flex-end; /* Push to bottom */
-   padding-bottom: 80px; /* Adjust padding */
+   padding-bottom: 70px; /* Adjusted for smaller form */
 }
 
 .signup-form .input-overlay {
   /* Example: slightly different layout for signup */
   justify-content: flex-end; /* Push to bottom */
-  padding-bottom: 60px; /* Adjust padding */
+  padding-bottom: 50px; /* Adjusted for smaller form */
 }
 
 
@@ -84,14 +107,17 @@ body {
 .input-overlay input[type="password"] {
   width: 70%; /* Adjust width */
   padding: 10px;
-  margin-bottom: 15px;
+  margin-bottom: 12px; /* Reduced spacing */
   border: 1px solid #ccc;
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.8);
+  font-size: 0.95em; /* Slightly smaller text */
+  transform-style: preserve-3d; /* Ensure 3D space is preserved */
+  position: relative; /* Ensure they're above the form image */
 }
 
 .submit-btn {
-  padding: 10px 20px;
+  padding: 8px 20px; /* Slightly smaller */
   background-color: #8FBC8F; /* Example color */
   color: white;
   border: none;
@@ -100,6 +126,8 @@ body {
   text-transform: uppercase;
   font-weight: bold;
   margin-top: 10px;
+  transform-style: preserve-3d; /* Ensure 3D space is preserved */
+  position: relative; /* Ensure they're above the form image */
 }
 
 .submit-btn:hover {
@@ -107,10 +135,12 @@ body {
 }
 
 .form-link {
-  margin-top: 15px;
+  margin-top: 12px; /* Reduced spacing */
   color: #333;
   text-decoration: none;
-  font-size: 0.9em;
+  font-size: 0.85em; /* Smaller text */
+  transform-style: preserve-3d; /* Ensure 3D space is preserved */
+  position: relative; /* Ensure they're above the form image */
 }
 
 .form-link:hover {
@@ -121,6 +151,8 @@ body {
     color: red;
     font-weight: bold;
     margin-bottom: 15px;
+    transform-style: preserve-3d; /* Ensure 3D space is preserved */
+    position: relative; /* Ensure they're above the form image */
 }
 
 /* Remove animation classes if not needed, or redefine */
@@ -138,4 +170,42 @@ body {
 /* For example, specific input field positioning if the background image dictates it */
 /*.login-form input[name="username"] { ... }*/
 /*.login-form input[name="password"] { ... }*/
-/*.signup-form input { ... }*/ 
+/*.signup-form input { ... }*/
+
+/* Hide home button */
+a[href="/"] {
+  display: none !important;
+}
+
+/*
+ * CUSTOMIZATION GUIDE:
+ * 
+ * 1. Form Size:
+ *    - Adjust .form-container width/height for overall size
+ *    - Currently set to 90vw (90% of viewport width)
+ *    - Increase for larger forms, decrease for smaller forms
+ * 
+ * 2. Input Field Positioning:
+ *    - Modify .login-form/.signup-form .input-overlay padding values
+ *    - Adjust justify-content for vertical position (flex-start, center, flex-end)
+ *    - Use padding-bottom to fine-tune alignment
+ * 
+ * 3. Input Field Styling:
+ *    - Change .input-overlay input width percentage
+ *    - Adjust padding for bigger/smaller input fields
+ *    - Modify border/background for different visual style
+ * 
+ * 4. Button Styling:
+ *    - Change .submit-btn background-color for different colors
+ *    - Adjust padding for button size
+ *    - Modify border-radius for rounded corners
+ * 
+ * 5. Text Styling:
+ *    - Change .form-link color and font-size
+ *    - Adjust error-message color and weight
+ *
+ * 6. Tilt Effect Adjustment:
+ *    - Modify data-tilt-max attribute in HTML for more/less tilt (default is 5)
+ *    - Change data-tilt-speed for faster/slower tilt response (default is 400) 
+ *    - Adjust data-tilt-perspective for more/less dramatic effect (default is 500)
+ */ 
