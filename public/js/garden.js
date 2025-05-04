@@ -21,8 +21,8 @@ let targetControlsTarget = new THREE.Vector3();
 let originalAmbientIntensity, originalDirectionalIntensity, originalFog;
 
 // Editor related globals
-const minSize = 0.8;
-const maxSize = 2.5;
+const minSize = 1.0;
+const maxSize = 2.0;
 let editHandles = [];
 let dragControls = null;
 
@@ -31,21 +31,28 @@ let plantsArray = [];
 
 // Define the sample map once
 const sampleMap = {
-  "C2": "/samples/melody/SO_CG_guzheng_note_low_E.wav",
-  "E2": "/samples/melody/SO_CG_guzheng_note_midlow_E.wav",
-  "G2": "/samples/melody/SO_CG_guzheng_note_midlow_G.wav",
-  "A2": "/samples/melody/SO_CG_guzheng_note_midlow_A.wav",
-  "C3": "/samples/melody/SO_CG_guzheng_note_mid_D.wav",
-  "D3": "/samples/melody/SO_CG_guzheng_note_midhigh_D.wav",
-  "E3": "/samples/melody/SO_CG_guzheng_note_midhigh_E.wav",
-  "G3": "/samples/melody/SO_CG_guzheng_note_midhigh_G.wav",
-  "A3": "/samples/melody/SO_CG_guzheng_note_midhigh_A.wav",
-  "B3": "/samples/melody/SO_CG_guzheng_note_midhigh_B.wav",
-  "C4": "/samples/melody/SO_CG_guzheng_note_high_D.wav",
-  "E4": "/samples/melody/SO_CG_guzheng_note_high_E.wav",
-  "G4": "/samples/melody/SO_CG_guzheng_note_high_G.wav",
-  "A4": "/samples/melody/SO_CG_guzheng_note_high_A.wav",
-  "B4": "/samples/melody/SO_CG_guzheng_note_high_B.wav"
+  "D2": "/samples/melody/SO_CG_guzheng_note_low_D.wav",
+  "E2": "/samples/melody/SO_CG_guzheng_note_low_E.wav",
+  "G2": "/samples/melody/SO_CG_guzheng_note_low_G.wav",
+  "A2": "/samples/melody/SO_CG_guzheng_note_low_A.wav",
+
+  "D3": "/samples/melody/SO_CG_guzheng_note_midlow_D.wav",
+  "E3": "/samples/melody/SO_CG_guzheng_note_midlow_E.wav",
+  "G3": "/samples/melody/SO_CG_guzheng_note_midlow_G.wav",
+  "A3": "/samples/melody/SO_CG_guzheng_note_midlow_A.wav",
+  "B3": "/samples/melody/SO_CG_guzheng_note_midlow_B.wav",
+
+  "D4": "/samples/melody/SO_CG_guzheng_note_midhigh_D.wav",
+  "E4": "/samples/melody/SO_CG_guzheng_note_midhigh_E.wav",
+  "G4": "/samples/melody/SO_CG_guzheng_note_midhigh_G.wav",
+  "A4": "/samples/melody/SO_CG_guzheng_note_midhigh_A.wav",
+  "B4": "/samples/melody/SO_CG_guzheng_note_midhigh_B.wav",
+
+  "D5": "/samples/melody/SO_CG_guzheng_note_high_D.wav",
+  "E5": "/samples/melody/SO_CG_guzheng_note_high_E.wav",
+  "G5": "/samples/melody/SO_CG_guzheng_note_high_G.wav",
+  "A5": "/samples/melody/SO_CG_guzheng_note_high_A.wav",
+  "B5": "/samples/melody/SO_CG_guzheng_note_high_B.wav"
 };
 
 Tone.Transport.scheduleRepeat(onBeat, "16n");
@@ -53,6 +60,10 @@ Tone.Transport.scheduleRepeat(onBeat, "16n");
 const playButton = document.getElementById('play-button');
 const tempoSlider = document.getElementById('tempo-slider');
 const randomButton = document.getElementById('random-note');
+
+// Add references for new elements
+const saveButton = document.getElementById('save-button');
+const saveNotification = document.getElementById('save-notification');
 
 setup();
 
@@ -325,6 +336,18 @@ function addRandomNote() {
   createPlant(randomTrack, randomTime); 
 }
 
+// Utility function to map pitch to radius
+function pitchToRadius(pitch) {
+    const midi = Tone.Frequency(pitch).toMidi();
+    // Map MIDI range (adjust as needed based on your actual MIDI values)
+    // Example: MIDI 38 (D2) to 71 (B5) maps to radius 5 to 12
+    const minMidi = 38; 
+    const maxMidi = 71; 
+    const minRadius = 5;
+    const maxRadius = 12;
+    return map(midi, minMidi, maxMidi, minRadius, maxRadius);
+}
+
 function createPlant(track, step, plantModelIndex) {
   if (plantsArray.length === 0) {
     console.error("Attempted to create plant before models loaded.");
@@ -360,7 +383,14 @@ function createPlant(track, step, plantModelIndex) {
     }
   });
   
-  const radius = 5 + Math.random() * 7;
+  // Calculate pitch based on track
+  const notePos = (nTracks - 1) - track;
+  const octave = baseOctave + Math.floor(notePos / 7);
+  const noteName = noteNames[notePos % 7];
+  const pitch = noteName + octave;
+
+  // Determine radius based on pitch
+  const radius = pitchToRadius(pitch);
   const angle = (step / nSteps) * Math.PI * 2;
   const x = Math.cos(angle) * radius;
   const z = Math.sin(angle) * radius;
@@ -426,8 +456,14 @@ function initEvents() {
   tempoSlider.addEventListener('input', updateTempo);
   renderer.domElement.addEventListener('click', onDocumentMouseClick, false);
   window.addEventListener('keydown', onDocumentKeyDown, false);
+  
+  saveButton.addEventListener('click', (event) => { // Add listener for new save button
+      event.preventDefault(); // Prevent default link behavior
+      manualSaveGarden(); 
+  }); 
 
-  window.addEventListener('beforeunload', saveGardenData);
+  // Remove the automatic save on beforeunload
+  // window.addEventListener('beforeunload', saveGardenData); 
 }
 
 async function togglePlay() {
@@ -480,6 +516,9 @@ function getCurrentGardenState() {
     };
 }
 
+// Remove or comment out the old saveGardenData function and its beacon/fetch logic 
+// as it's replaced by manualSaveGarden and the new endpoint.
+/* 
 function saveGardenData() {
     const gardenState = getCurrentGardenState();
     const dataToSend = JSON.stringify({ gardenData: gardenState });
@@ -498,6 +537,46 @@ function saveGardenData() {
             keepalive: true
         }).catch(error => console.error('Error saving garden data with fetch:', error));
     }
+}
+*/
+
+// --- New Save Functionality ---
+function manualSaveGarden() {
+    const gardenState = getCurrentGardenState(); // Reuse existing function
+    console.log("Manually saving garden state:", gardenState);
+
+    fetch('/save-garden', { // Use a new endpoint for manual save
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(gardenState), // Send the state directly
+    })
+    .then(response => {
+        if (!response.ok) {
+            // Throw an error if response status is not 2xx
+            return response.text().then(text => { 
+                throw new Error(`Save failed: ${response.status} ${response.statusText} - ${text}`) 
+            });
+        }
+        return response.json(); // Or response.text() if backend sends text
+    })
+    .then(data => {
+        console.log('Save successful:', data);
+        showSaveNotification();
+    })
+    .catch(error => {
+        console.error('Error saving garden:', error);
+        // Optionally: Show an error notification to the user
+        alert(`Failed to save garden: ${error.message}`); 
+    });
+}
+
+function showSaveNotification() {
+    saveNotification.classList.add('show');
+    setTimeout(() => {
+        saveNotification.classList.remove('show');
+    }, 2500); // Show for 2.5 seconds
 }
 
 function onDocumentMouseClick(event) {
@@ -595,7 +674,6 @@ function exitPlantEditor() {
   }
   removeHandles();
 
-  // --- Dynamic Audio Routing & Effect Creation --- REMOVED ---
   // console.log("Disconnecting effects chain, reconnecting player directly.");
   // if (selectedPlant && selectedPlant.userData.effects) { ... } // Removed in previous step
 

@@ -28,6 +28,9 @@ app.use(session({
 }));
 app.set("view engine", "ejs"); // attach ejs as templating engine
 
+// Middleware to parse JSON bodies
+app.use(express.json()); 
+
 // default route - home page showing recent gardens
 app.get("/", (request, response) => {
   // Determine user state from session
@@ -83,8 +86,10 @@ app.post("/authenticate", urlEncodedParser, (req, res) => {
     req.session.userId = user._id; // Store user's NeDB ID in the session
     req.session.username = user.username; // Optionally store username for convenience
     
-    // Redirect to user's garden page on success
-    res.redirect("/mygarden");
+    // Redirect back to the originally requested page or to /mygarden
+    const returnTo = req.session.returnTo || '/mygarden';
+    delete req.session.returnTo; // Clear the stored path
+    res.redirect(returnTo);
   });
 });
 
@@ -150,6 +155,8 @@ app.post("/register", urlEncodedParser, (req, res) => {
 app.get("/mygarden", (req, res) => {
   // Check if user is logged in via session
   if (!req.session.userId) {
+    // Store the original URL the user was trying to access
+    req.session.returnTo = req.originalUrl; 
     // If not logged in, redirect to login page
     return res.redirect("/login");
   }
@@ -300,6 +307,42 @@ app.get('/garden/:id', (req, res) => {
   });
 });
 */
+
+// NEW: Route for manual garden saving
+app.post("/save-garden", (req, res) => { // No need for express.json() here if applied globally above
+    // 1. Check if user is logged in
+    if (!req.session.userId) {
+        return res.status(401).json({ message: "Unauthorized: Please log in to save." });
+    }
+
+    const userId = req.session.userId;
+    const gardenState = req.body; // Expecting { plants: [...], tempo: ... } directly
+
+    // 2. Basic validation of the received garden state
+    if (!gardenState || typeof gardenState !== 'object' || !Array.isArray(gardenState.plants) || typeof gardenState.tempo !== 'number') {
+        console.error(`Invalid garden data received from user ${userId}:`, gardenState);
+        return res.status(400).json({ message: "Invalid garden data format received." });
+    }
+    // Optional: Add deeper validation (e.g., check plant structure)
+
+    // 3. Update the user's document in the database
+    database.update({ _id: userId }, { $set: { garden: gardenState } }, {}, (err, numReplaced) => {
+        if (err) {
+            console.error(`Database error saving garden for user ${userId}:`, err);
+            return res.status(500).json({ message: "Server error saving garden." });
+        }
+
+        if (numReplaced === 0) {
+            // User document not found (shouldn't happen if session is valid)
+            console.error(`Failed to save garden, user not found: ${userId}`);
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        console.log(`Garden manually saved for user ${req.session.username} (${userId})`);
+        // 4. Send success JSON response
+        res.status(200).json({ message: "Garden saved successfully!" }); 
+    });
+});
 
 // API route to save garden data for the logged-in user
 app.post("/api/savegarden", express.json(), (req, res) => { // Use express.json() for parsing JSON body

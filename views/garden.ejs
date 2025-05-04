@@ -26,6 +26,11 @@
     <img src="/2dassets/explore.png" class="explore-button" alt="Explore">
   </a>
 
+  <!-- Save button -->
+  <a href="#" id="save-button">
+    <img src="/2dassets/save.png" class="save-button" alt="Save Garden">
+  </a>
+
   <div id="three-container"></div>
 
   <div class="controls">
@@ -50,6 +55,9 @@
     const gardenDataElement = document.getElementById('garden-data');
     const initialGardenData = JSON.parse(gardenDataElement.getAttribute('data-garden'));
   </script>
+
+  <!-- Saved Notification -->
+  <div id="save-notification" class="save-notification">Saved!</div>
 
   <script src="/js/garden.js"></script>
 

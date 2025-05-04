@@ -61,14 +61,6 @@
     <a href="/mygarden">
       <img src="/2dassets/your_garden.png" class="bookmark garden" alt="Your Garden">
     </a>
-  <% } else { %>
-     <a href="#" onclick="document.getElementById('createGardenForm').submit(); return false;">
-       <img src="/2dassets/your_garden.png" class="bookmark garden" alt="Your Garden">
-     </a>
-     <form id="createGardenForm" style="display: none;" action="/saveGarden" method="POST">
-       <input type="hidden" name="owner" value="Anonymous">
-       <input type="hidden" name="gardenName" value="Untitled Garden">
-     </form>
   <% } %>
 
   <a href="/explore">
