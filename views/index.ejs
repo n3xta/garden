@@ -5,38 +5,15 @@
   <title>The Garden is a Loop</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="/css/main.css">
-  <link rel="stylesheet" href="/css/auth-transition.css">
-  <style>
-    .welcome-message {
-      position: fixed;
-      top: 48%;
-      left: 48%;
-      transform: translate(-50%, -50%);
-      z-index: 0;
-      font-family: 'PPPangaia', sans-serif;
-      font-size: 3rem;
-      color: white;
-      text-align: center;
-      display: none;
-      will-change: transform;
-    }
-    
-    .welcome-message .username {
-      font-weight: bold;
-      display: block;
-      font-size: 4rem;
-      margin-top: 10px;
-    }
-  </style>
 </head>
 <body>
-  <div class="background"></div>
+  <div class="background full-page-bg" data-tilt data-tilt-full-page-listening></div>
   <% if (user) { %>
-    <div class="welcome-message" style="display: block;">
+    <div class="welcome-message parallax-item" style="display: block;" data-tilt data-tilt-scale="1.1">
       welcome, <span class="username"><%= user.username %></span>
     </div>
   <% } else { %>
-    <img src="/2dassets/letter.png" class="letter" alt="Letter">
+    <img src="/2dassets/letter.png" class="letter parallax-item" alt="Letter" data-tilt data-tilt-scale="1.1">
   <% } %>
   
   <!-- Auth bookmarks -->
@@ -68,7 +45,8 @@
     <img src="/2dassets/explore.png" class="bookmark explore" alt="Explore">
   </a>
   
+  <script src="/lib/vanilla-tilt.js"></script>
   <script src="/js/main.js"></script>
-  <script src="/js/auth-transition.js"></script>
+  <script src="/js/auth.js"></script>
 </body>
 </html>

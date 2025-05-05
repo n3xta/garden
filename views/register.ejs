@@ -5,28 +5,15 @@
   <title>Register - The Garden is a Loop</title>
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/auth.css">
-  <link rel="stylesheet" href="/css/auth-transition.css">
-  <style>
-    /* Override background for register page to use wood.jpg */
-    .background {
-      background-image: url('/2dassets/wood.jpg') !important;
-      opacity: 1 !important;
-    }
-    
-    /* Hide elements initially for a better transition effect */
-    .form-wrapper {
-      opacity: 0;
-    }
-  </style>
 </head>
-<body>
-  <div class="background"></div>
+<body class="auth-page">
+  <div class="background full-page-bg" data-tilt data-tilt-full-page-listening></div>
 
   <div class="form-wrapper show-form">
     <div class="form-container signup-form">
-      <div data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-perspective="500" class="tilt-container">
-        <img src="/2dassets/signup_form.png" class="form-image show-image" alt="Signup Form">
-        <div class="input-overlay show-inputs">
+      <div data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-perspective="500" data-tilt-scale="1.1" class="tilt-container parallax-container">
+        <img src="/2dassets/signup_form.png" class="form-image show-image parallax-item" alt="Signup Form">
+        <div class="input-overlay show-inputs parallax-item">
           <form id="signup-form" method="POST" action="/register">
              <% if (typeof error !== 'undefined' && error) { %>
                  <p class="error-message"><%= error %></p>
@@ -44,21 +31,7 @@
 
   <a href="/" class="home-link">Home</a>
 
-  <script src="/js/auth-transition.js"></script>
   <script src="/lib/vanilla-tilt.js"></script>
-  <script>
-  // Ensure inputs are properly clickable
-  document.addEventListener('DOMContentLoaded', function() {
-    // Force tilt to reinitialize properly
-    const tiltContainer = document.querySelector('.tilt-container');
-    if (typeof VanillaTilt !== 'undefined' && tiltContainer) {
-      VanillaTilt.init(tiltContainer, {
-        max: 5,
-        speed: 400,
-        perspective: 500
-      });
-    }
-  });
-  </script>
+  <script src="/js/auth.js"></script>
 </body>
 </html>

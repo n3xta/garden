@@ -32,10 +32,10 @@ body {
 
 .letter {
   position: fixed;
-  top: 48%;
-  left: 48%;
+  top: 50%;
+  left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 0;
+  z-index: 2;
   max-width: 90vw;
   max-height: 90vh;
   will-change: transform;
@@ -107,7 +107,7 @@ body {
   top: 48%;
   left: 48%;
   transform: translate(-50%, -50%);
-  z-index: 0;
+  z-index: 2;
   font-family: 'PPPangaia', sans-serif;
   font-size: 3rem;
   color: white;
@@ -125,4 +125,130 @@ body {
 
 .welcome-message.show {
   display: block;
+}
+
+/* Incorporated from parallax-effect.css */
+/* Parallax effect styles */
+.parallax-container {
+  transform-style: preserve-3d;
+  transform: perspective(1000px);
+  transition: transform 0.3s ease;
+}
+
+.parallax-item {
+  transform: translateZ(20px);
+  transition: transform 0.3s ease;
+}
+
+.full-page-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+/* Additional styles for the hover effect */
+.scale-on-hover {
+  transition: transform 0.3s ease;
+}
+
+.scale-on-hover:hover {
+  transform: translateZ(20px) scale(1.1);
+}
+
+/* Incorporated from auth-transition.css */
+.transition-overlay {
+  position: fixed;
+  bottom: -100%; /* Start from below the viewport */
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
+  background: url('/2dassets/wood.jpg') no-repeat center center;
+  background-size: cover;
+  transition: bottom 1s cubic-bezier(0.19, 1, 0.22, 1); /* Exponential decrease curve */
+}
+
+.transition-overlay.active {
+  bottom: 0; /* Move to fill the screen */
+}
+
+.auth-form-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  z-index: 1000;
+  opacity: 0;
+  /* transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+  transition-delay: 0.5s; */
+}
+
+/* .auth-form-container.active {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+} */
+
+.auth-form-container img {
+  max-width: 90%;
+  max-height: 90vh;
+  display: block;
+  margin: 0 auto;
+}
+
+/* For smooth transitions between auth pages
+.form-wrapper {
+  transition: opacity 0.5s ease-in-out;
+} */
+
+/* Form switching transitions */
+@keyframes slideUp {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-50vh); opacity: 0; }
+}
+
+@keyframes slideDown {
+  0% { transform: translateY(50vh); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.exit-up {
+  animation: slideUp 0.6s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+.enter-from-below {
+  animation: slideDown 0.6s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  transform: translateY(50vh);
+  opacity: 0;
+}
+
+/* Positioning for the switching forms */
+.form-switching-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  width: 90vw;
+  max-width: 550px;
+}
+
+/* Input field interaction fixes */
+.tilt-container {
+  z-index: 1;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+.input-field {
+  cursor: text !important;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.input-field:focus {
+  outline: 2px solid #4a6741;
+  box-shadow: 0 0 5px rgba(74, 103, 65, 0.5);
 } 

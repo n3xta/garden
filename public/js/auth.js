@@ -45,71 +45,51 @@ function handleAuthPageTransition(event, formType) {
   // Add exit animation to the current form
   currentFormContainer.classList.add('exit-up');
   
-  // Create a new container for the switching animation
-  const switchingContainer = document.createElement('div');
-  switchingContainer.className = 'form-switching-container';
-  document.body.appendChild(switchingContainer);
-  
-  // Create a new form container
-  const newFormContainer = document.createElement('div');
-  newFormContainer.className = formType === 'login' ? 'form-container login-form' : 'form-container signup-form';
-  
-  // Create the new tilt container
-  const tiltDiv = document.createElement('div');
-  tiltDiv.setAttribute('data-tilt', '');
-  tiltDiv.setAttribute('data-tilt-max', '5');
-  tiltDiv.setAttribute('data-tilt-speed', '400');
-  tiltDiv.setAttribute('data-tilt-perspective', '500');
-  tiltDiv.className = 'tilt-container';
-  
-  // Create the form image
-  const formImage = document.createElement('img');
-  formImage.src = formType === 'login' 
-    ? '/2dassets/login_form.png' 
-    : '/2dassets/signup_form.png';
-  formImage.alt = formType === 'login' ? 'Login Form' : 'Signup Form';
-  formImage.className = 'form-image show-image';
-  
-  // Create input overlay
-  const inputOverlay = document.createElement('div');
-  inputOverlay.className = 'input-overlay show-inputs';
-  
-  // Set initial style before animation
-  newFormContainer.style.transform = 'translateY(50vh)';
-  newFormContainer.style.opacity = '0';
-  
-  // Add everything to the DOM
-  tiltDiv.appendChild(formImage);
-  tiltDiv.appendChild(inputOverlay);
-  newFormContainer.appendChild(tiltDiv);
-  switchingContainer.appendChild(newFormContainer);
-  
-  // Start entering animation
+  // Navigate to the new page after exit animation starts
   setTimeout(() => {
-    newFormContainer.classList.add('enter-from-below');
-    
-    // After animation completes, navigate to the new page
-    setTimeout(() => {
-      window.location.href = formType === 'login' ? '/login' : '/register';
-    }, 600);
-  }, 100);
+    // Simply navigate to the target page and let it handle its own entrance animation
+    window.location.href = formType === 'login' ? '/login' : '/register';
+  }, 500); // 延长动画时间，确保用户可以看到完整的上滑动画
 }
 
 // Function to initialize the auth page (login or register)
 function initAuthPage() {
+  // Check if this page is being navigated to from another auth page
+  const fromAuthPage = document.referrer.includes('/login') || document.referrer.includes('/register');
+  
   // Show the form with animation and play sound effect
   setTimeout(() => {
     const paperSound = new Audio('/samples/ui/paper.wav');
     paperSound.play();
     
-    // Make form visible
+    // Make form visible with entrance animation
     const formWrapper = document.querySelector('.form-wrapper');
+    const formContainer = document.querySelector('.form-container');
+    
     if (formWrapper) {
       formWrapper.style.opacity = '1';
+      
+      // Add entrance animation from below if coming from another auth page
+      if (fromAuthPage && formContainer) {
+        formContainer.classList.add('enter-from-below');
+      }
     }
     
     // Initialize vanilla tilt if it exists
     if (typeof VanillaTilt !== 'undefined') {
+      // Initialize background tilt with full page listening
+      const background = document.querySelector('.background');
+      if (background) {
+        VanillaTilt.init(background, {
+          max: 5,
+          speed: 1000,
+          scale: 1.05,
+          perspective: 1000,
+          fullPageListening: true
+        });
+      }
+      
+      // Initialize form tilt with 3D effect
       const tiltElements = document.querySelectorAll('[data-tilt]');
       if (tiltElements.length > 0) {
         VanillaTilt.init(tiltElements);

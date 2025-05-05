@@ -29,6 +29,8 @@ body {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  opacity: 0; /* 初始状态为隐藏，通过JS显示 */
+  transition: opacity 0.5s ease-in-out;
 }
 
 .form-container {
@@ -54,6 +56,7 @@ body {
   object-fit: contain; /* Or cover, depending on image */
   display: block;
   will-change: transform; /* Improves performance for tilt effect */
+  transform: translateZ(20px); /* 为图片添加3D效果 */
 }
 
 .input-overlay {
@@ -71,6 +74,7 @@ body {
   text-align: center; 
   transform-style: preserve-3d; /* Ensure 3D space is preserved */
   pointer-events: none; /* Allow clicks to pass through to the tilt element */
+  transform: translateZ(40px); /* 为输入框添加3D效果 */
 }
 
 /* Make form elements clickable */
@@ -155,22 +159,31 @@ body {
     position: relative; /* Ensure they're above the form image */
 }
 
-/* Remove animation classes if not needed, or redefine */
-.show-form {
-    /* Ensures wrapper is visible */
-}
-.show-image {
-    /* Ensures image is visible */
-}
-.show-inputs {
-    /* Ensures inputs are visible */
+/* 添加从EJS文件中整合的内联样式 */
+/* Override background for auth pages to use wood.jpg */
+.auth-page .background {
+  background-image: url('/2dassets/wood.jpg') !important;
+  opacity: 1 !important;
 }
 
-/* Inherit/reuse styles from auth-forms.css if needed */
-/* For example, specific input field positioning if the background image dictates it */
-/*.login-form input[name="username"] { ... }*/
-/*.login-form input[name="password"] { ... }*/
-/*.signup-form input { ... }*/
+/* Custom tilt effects */
+.tilt-container {
+  transform-style: preserve-3d;
+  transform: perspective(1000px);
+  z-index: 1;
+  backface-visibility: hidden;
+}
+
+/* Special animation classes */
+.show-form {
+  display: flex; /* 确保表单容器可见 */
+}
+.show-image {
+  opacity: 1; /* 确保图片可见 */
+}
+.show-inputs {
+  opacity: 1; /* 确保输入区域可见 */
+}
 
 /* Hide home button */
 a[href="/"] {
