@@ -156,17 +156,16 @@ function initializeGardenFromData() {
         if (plant && plantData.audioParams) {
             // Apply loaded params to the plant's specific effects
             if (plant.userData.effects) {
-                plant.userData.effects.filter.frequency.value = plantData.audioParams.filterFreq !== undefined ? plantData.audioParams.filterFreq : 800;
-                plant.userData.effects.chorus.depth.value = plantData.audioParams.chorusDepth !== undefined ? plantData.audioParams.chorusDepth : 0.3;
-                plant.userData.effects.delay.feedback.value = plantData.audioParams.delayFeedback !== undefined ? plantData.audioParams.delayFeedback : 0.3;
-                // Handle old param names if necessary (optional, adds robustness)
-                if (plantData.audioParams.distortion !== undefined) { /* map to chorus/delay? */ }
-                if (plantData.audioParams.reverbTime !== undefined) { /* map to delay? */}
+                // Now using the values as they were saved without changes
+                plant.userData.effects.filter.frequency.value = plantData.audioParams.filterFreq !== undefined ? plantData.audioParams.filterFreq : 0;
+                plant.userData.effects.chorus.depth.value = plantData.audioParams.chorusDepth !== undefined ? plantData.audioParams.chorusDepth : 0;
+                plant.userData.effects.delay.feedback.value = plantData.audioParams.delayFeedback !== undefined ? plantData.audioParams.delayFeedback : 0;
             } else {
                 console.warn("Plant created but effects object missing during load.");
             }
         }
         if (plant && plantData.scale) {
+            // Apply the saved scale directly
             plant.scale.copy(plantData.scale);
         }
       } else {
@@ -459,19 +458,23 @@ function createPlant(track, step, plantModelIndex) {
   const x = Math.cos(angle) * radius;
   const z = Math.sin(angle) * radius;
 
-  const plantScale = selectedPlantData.scale;
-  selectedPlant.scale.set(plantScale, plantScale, plantScale);
+  // Set default scale to 1.0 (neutral position)
+  const defaultScale = 1.0;
+  selectedPlant.scale.set(defaultScale, defaultScale, defaultScale);
   selectedPlant.position.set(x, 0, z);
   
   // --- Create Sampler and Effects PER PLANT ---
   const plantSampler = new Tone.Sampler(sampleMap).toDestination(); // Initial connection to destination
-  const plantFilter = new Tone.Filter(800, "lowpass"); // Default freq
-  const plantChorus = new Tone.Chorus(4, 2.5, 0.3).start(); // Default depth
-  const plantDelay = new Tone.FeedbackDelay("8n", 0.3); // Default feedback
+  
+  // Use "clean" audio settings with no effect by default
+  const plantFilter = new Tone.Filter(0, "lowpass"); // 0 frequency = no filtering effect
+  const plantChorus = new Tone.Chorus(4, 2.5, 0).start(); // 0 depth = no chorus effect
+  const plantDelay = new Tone.FeedbackDelay("8n", 0); // 0 feedback = no delay effect
+  const plantGain = new Tone.Gain(0.3); // Lower volume overall
 
-  // Chain: Sampler -> Filter -> Chorus -> Delay -> Destination
+  // Chain: Sampler -> Filter -> Chorus -> Delay -> Gain -> Destination
   plantSampler.disconnect(Tone.Destination); // Disconnect initial connection
-  plantSampler.chain(plantFilter, plantChorus, plantDelay, Tone.Destination);
+  plantSampler.chain(plantFilter, plantChorus, plantDelay, plantGain, Tone.Destination);
   // --- End Per-Plant Audio Setup ---
 
   selectedPlant.userData = {
@@ -484,7 +487,8 @@ function createPlant(track, step, plantModelIndex) {
     effects: {
         filter: plantFilter,
         chorus: plantChorus,
-        delay: plantDelay
+        delay: plantDelay,
+        gain: plantGain
     }
   };
   
@@ -880,20 +884,17 @@ function onHandleDrag(event) {
         // Reset the dragged object's position to where updateHandlePositions placed it.
         // This prevents DragControls internal logic from fighting our scaling logic.
         dragObject.position.copy(updatedHandleData.position);
-        // We also need to update the startDragPosition incrementally IF we want smooth continuous dragging
-        // OR reset startDragPosition/startPlantScale each frame (simpler, might feel less smooth)
-        // Let's try resetting each frame for simplicity first:
-        // dragObject.userData.startDragPosition = dragObject.position.clone();
-        // dragObject.userData.startPlantScale = selectedPlant.scale.clone();
-        // -- Alternative: More complex incremental approach needed for perfect smoothness --
     }
     // --- End Override --- 
 
     // Map potentially non-uniform scale to audio parameters
+    // Now using scale of 1.0 as the neutral point (no effect)
     const scale = selectedPlant.scale;
-    const freq = map(scale.x, minSize, maxSize, 200, 3000); // X scale -> Filter Frequency
-    const chorDepth = map(scale.y, minSize, maxSize, 0.1, 0.9); // Y scale -> Chorus Depth
-    const delayFb = map(scale.z, minSize, maxSize, 0.1, 0.7); // Z scale -> Delay Feedback
+    
+    // Changed range to start from 0 for clean audio at default scale
+    const freq = map(scale.x, minSize, maxSize, 0, 3000); // X scale -> Filter Frequency
+    const chorDepth = map(scale.y, minSize, maxSize, 0, 0.9); // Y scale -> Chorus Depth 
+    const delayFb = map(scale.z, minSize, maxSize, 0, 0.7); // Z scale -> Delay Feedback
 
     // Update Tone.js effects in real-time (if they exist)
     // Apply directly to the selected plant's persistent effects
@@ -902,24 +903,13 @@ function onHandleDrag(event) {
         selectedPlant.userData.effects.chorus.depth.value = chorDepth;
         selectedPlant.userData.effects.delay.feedback.value = delayFb;
     }
-    // if (currentEditEffects) { ... } // REMOVED - This block caused the ReferenceError
-    // {
-    //     currentEditEffects.filter.frequency.value = freq;
-    //     currentEditEffects.chorus.depth.value = chorDepth; // Update chorus depth
-    //     currentEditEffects.delay.feedback.value = delayFb; // Update delay feedback
-    // }
 
-    // Store current audio params back to userData (so they are saved on exit) // REMOVED - No longer needed, live in effects
-    // Use new parameter names
+    // Store current audio params back to userData (so they are saved on exit)
     selectedPlant.userData.audioParams = {
         filterFreq: freq,
         chorusDepth: chorDepth,
         delayFeedback: delayFb
     };
-
-    // Prevent DragControls from moving the handle itself (we reposition it manually)
-    // This might require overriding DragControls update or resetting position here.
-    // For now, updateHandlePositions() might visually correct it.
 }
 
 function onHandleDragEnd(event) {
@@ -935,8 +925,13 @@ function onHandleDragEnd(event) {
     }
 }
 
-// Utility function for mapping values
+// Utility function for mapping values with special handling for neutral point
 function map(value, inMin, inMax, outMin, outMax) {
+  // Special case: if value is close to 1.0 (default scale), return outMin (no effect)
+  if (Math.abs(value - 1.0) < 0.05) {
+    return outMin;
+  }
+  
   // Clamp value to input range
   const clampedValue = Math.max(inMin, Math.min(value, inMax));
   // Perform linear interpolation

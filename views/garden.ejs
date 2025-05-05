@@ -6,6 +6,7 @@
 
   <link rel="stylesheet" href="/css/garden.css">
   <link rel="stylesheet" href="/css/transition.css">
+  <link rel="stylesheet" href="/css/ambient-selector.css">
   
   <!-- 预先加载transition.js以确保早于garden.js执行 -->
   <script src="/js/transition.js"></script>
@@ -32,6 +33,15 @@
   <a href="/explore" data-transition="true">
     <img src="/img/explore.png" class="explore-button" alt="Explore">
   </a>
+
+  <!-- Ambient Sound Selector -->
+  <div class="ambient-selector">
+    <img src="/img/ambient1.png" class="ambient-icon" data-sound="1" alt="Ambient Sound 1">
+    <img src="/img/ambient2.png" class="ambient-icon" data-sound="2" alt="Ambient Sound 2">
+    <img src="/img/ambient3.png" class="ambient-icon" data-sound="3" alt="Ambient Sound 3">
+    <img src="/img/ambient4.png" class="ambient-icon" data-sound="4" alt="Ambient Sound 4">
+    <img src="/img/no_ambient.png" class="ambient-icon" data-sound="none" alt="No Ambient Sound">
+  </div>
 
   <!-- Save button (only show if not in read-only mode) -->
   <% if (!locals.isReadOnly) { %>
@@ -75,6 +85,7 @@
   <div id="save-notification" class="save-notification">Saved!</div>
 
   <!-- 加载garden相关JS -->
+  <script src="/js/ambient-sound.js"></script>
   <script src="/js/garden.js"></script>
 </body>
 </html>
