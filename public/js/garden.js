@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log("页面加载 - transition状态检查:");
     console.log("- pageIsEntering值:", sessionStorage.getItem('pageIsEntering'));
     console.log("- Transition层可见性:", document.querySelector('.cd-transition-layer').classList.contains('visible'));
+    
+    // 在数据加载完成后执行setup
+    setup();
   } else {
     console.error("Garden data element not found!");
   }
@@ -112,8 +115,6 @@ const saveNotification = document.getElementById('save-notification');
 
 // Initialize garden background when DOM is loaded
 document.addEventListener('DOMContentLoaded', setGardenBackground);
-
-setup();
 
 function setup() {
   initThree();
