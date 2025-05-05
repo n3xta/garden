@@ -149,6 +149,25 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     
+    // 播放过渡音效
+    if (url.includes('/explore')) {
+      // 播放explore音效
+      if (typeof AudioEffects !== 'undefined') {
+        AudioEffects.play('/samples/ui/explore.wav');
+      } else {
+        const exploreSound = new Audio('/samples/ui/explore.wav');
+        exploreSound.play().catch(err => console.warn('音效播放失败:', err));
+      }
+    } else if (url.includes('/garden') || url.includes('/mygarden') || url.includes('/view')) {
+      // 播放garden音效
+      if (typeof AudioEffects !== 'undefined') {
+        AudioEffects.play('/samples/ui/garden.wav');
+      } else {
+        const gardenSound = new Audio('/samples/ui/garden.wav');
+        gardenSound.play().catch(err => console.warn('音效播放失败:', err));
+      }
+    }
+    
     // 设置标记，表示下一个页面需要执行"ink out"动画
     sessionStorage.setItem('pageIsEntering', 'true');
     
@@ -187,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (isGardenPage && forceAnimation) {
         // Garden页面可能有复杂的3D加载，使用更长的延迟
         console.log('Garden页面 - 使用额外延迟等待3D内容加载');
-        setTimeout(resolve, 1000); // 给3D内容更多加载时间
+        setTimeout(resolve, 2000); // 给3D内容更多加载时间
       } else if (document.readyState === 'complete') {
         resolve();
       } else {
@@ -222,7 +241,7 @@ document.addEventListener('DOMContentLoaded', function() {
           transitionBackground.style.transform = '';
           transitionBackground.removeEventListener('animationend', onClose);
         });
-      }, isGardenPage ? 500 : 200); // Garden页面给更长时间
+      }, isGardenPage ? 1000 : 200); // Garden页面给更长时间
     });
   }
   

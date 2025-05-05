@@ -26,6 +26,15 @@ let isFiltered = false; // 跟踪是否有激活的搜索过滤
 
 // 页面初始化
 document.addEventListener('DOMContentLoaded', function() {
+  // 播放explore音效
+  if (typeof AudioEffects !== 'undefined') {
+    AudioEffects.play('/samples/ui/explore.wav');
+  } else {
+    // 如果音效模块未加载，使用原生Audio API
+    const exploreSound = new Audio('/samples/ui/explore.wav');
+    exploreSound.play().catch(err => console.warn('音效播放失败:', err));
+  }
+  
   // Background tilt effect
   setupTiltEffect();
   

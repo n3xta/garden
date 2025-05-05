@@ -118,6 +118,16 @@ document.addEventListener('DOMContentLoaded', setGardenBackground);
 
 function setup() {
   initThree();
+  
+  // 播放garden音效
+  if (typeof AudioEffects !== 'undefined') {
+    AudioEffects.play('/samples/ui/garden.wav');
+  } else {
+    // 如果音效模块未加载，使用原生Audio API
+    const gardenSound = new Audio('/samples/ui/garden.wav');
+    gardenSound.play().catch(err => console.warn('音效播放失败:', err));
+  }
+  
   loadPlantModels(() => {
     initializeGardenFromData();
   });
@@ -600,6 +610,9 @@ function saveGardenData() {
 
 // --- New Save Functionality ---
 function manualSaveGarden() {
+    // 播放保存音效
+    AudioEffects.play('/samples/ui/save.wav');
+    
     const gardenState = getCurrentGardenState(); // Reuse existing function
     console.log("Manually saving garden state:", gardenState);
 

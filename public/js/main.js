@@ -31,8 +31,12 @@ function initAuthPage() {
   const fromAuthPage = document.referrer.includes('/login') || document.referrer.includes('/register');
   
   // 播放纸张声音效果
-  const paperSound = new Audio('/samples/ui/paper.wav');
-  paperSound.play();
+  if (typeof AudioEffects !== 'undefined') {
+    AudioEffects.play('/samples/ui/paper.wav');
+  } else {
+    const paperSound = new Audio('/samples/ui/paper.wav');
+    paperSound.play();
+  }
   
   // 立即显示表单
   const formWrapper = document.querySelector('.form-wrapper');
@@ -101,8 +105,12 @@ function handleAuthTransition(event, formType) {
   const overlay = document.querySelector('.transition-overlay');
   
   // 播放木质声音
-  const woodSound = new Audio('/samples/ui/wood.wav');
-  woodSound.play();
+  if (typeof AudioEffects !== 'undefined') {
+    AudioEffects.play('/samples/ui/wood.wav');
+  } else {
+    const woodSound = new Audio('/samples/ui/wood.wav');
+    woodSound.play();
+  }
   
   // 开始动画
   overlay.classList.add('active');
@@ -118,8 +126,12 @@ function handleAuthPageTransition(event, formType) {
   event.preventDefault();
   
   // 播放纸张声音
-  const paperSound = new Audio('/samples/ui/paper.wav');
-  paperSound.play();
+  if (typeof AudioEffects !== 'undefined') {
+    AudioEffects.play('/samples/ui/paper.wav');
+  } else {
+    const paperSound = new Audio('/samples/ui/paper.wav');
+    paperSound.play();
+  }
   
   // 获取当前表单容器
   const currentFormContainer = document.querySelector('.form-container');
