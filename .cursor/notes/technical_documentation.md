@@ -128,19 +128,163 @@ Based on `server.js` logic and `database.txt` contents, user documents likely fo
 }
 ```
 
-## 6. Setup & Running
+## 6. Garden Background System
 
-1.  **Prerequisites:** Node.js and npm installed.
-2.  **Install Dependencies:** Run `npm install` in the project root directory.
-3.  **Start Server:** Run `node server.js`.
-4.  **Access:** Open `http://localhost:6001` in a web browser.
+Each user in the application is assigned a random background ID (1-41) at registration time. This ID determines which background image is displayed in their garden view from the collection of background images stored in `/public/2dassets/garden_bg/`.
 
-## 7. Potential Issues & Areas for Improvement
+**Implementation Details:**
+- Background ID assignment happens in `server.js` via the `assignBackgroundId()` function
+- The ID is stored in the user's document in the database under the `backgroundId` field
+- The frontend implementation is handled by `garden-background.js`, which:
+  - Retrieves the background ID from the data attribute of the `#garden-data` element
+  - Sets a CSS custom property `--garden-background` with the appropriate image URL
+  - The image is applied as a background via a pseudo-element in the CSS
 
-*   **Security:** Passwords are stored in plaintext. This is a critical security vulnerability and should be addressed immediately by implementing password hashing (e.g., using `bcrypt`).
-*   **Database:** NeDB is simple but might not scale well for larger applications or concurrent access. Consider migrating to a more robust database (e.g., PostgreSQL, MongoDB) for production environments.
-*   **Error Handling:** Error handling seems basic. More specific error messages and potentially logging could improve robustness.
-*   **Code Structure:** As the application grows, consider organizing routes and database logic into separate modules/files for better maintainability.
-*   **Frontend Logic:** The details of the frontend interaction (in `public/js`) are crucial for the user experience. The garden functionality heavily relies on `public/js/garden.js` interacting with `Three.js` and `Tone.js`.
-*   **Explore Functionality:** The `/explore` route fetches data but the corresponding `explore.ejs` view is empty.
-*   **Dependencies:** `multer` is installed but not used. Consider removing it if file uploads are not planned. 
+```javascript
+// garden-background.js
+function setGardenBackground() {
+  const backgroundId = getGardenBackgroundId();
+  document.documentElement.style.setProperty('--garden-background', 
+    `url('/2dassets/garden_bg/${backgroundId}.jpg')`);
+}
+```
+
+## 7. Read-Only Garden Viewing
+
+Users can view other users' gardens in a read-only mode without the ability to modify them.
+
+**Implementation Details:**
+- Accessible via the `/view/:id` endpoint, where `:id` is the user ID of the garden owner
+- Uses the same `garden.ejs` template as the editable garden but with a `isReadOnly` flag set to true
+- In read-only mode:
+  - The "Save" button is hidden
+  - The "Plant a Random Note" button is hidden
+  - A banner is displayed showing whose garden is being viewed
+  - If the viewer is logged in, a link to return to their own garden is provided
+
+## 8. Explore Page Functionality
+
+The Explore page allows users to browse and view gardens created by other users.
+
+**Implementation Details:**
+- Accessible via the `/explore` endpoint, which renders `explore.ejs`
+- Backend provides API endpoints that the frontend JavaScript uses to fetch garden data
+- Gardens are displayed in a grid with thumbnails and metadata (username, plant count, etc.)
+- Users can click on a garden to view it in read-only mode
+- The page includes search functionality to find specific gardens or users
+- Responsive layout adapts to different screen sizes
+
+## 9. Frontend Technologies
+
+### 9.1 Three.js (3D Rendering)
+
+The application uses Three.js for 3D rendering of the garden environment:
+
+- **Scene Setup**: Creates a 3D scene that represents the garden space
+- **Camera Setup**: Uses a perspective camera that allows users to navigate the 3D space
+- **Lighting**: Implements ambient and directional lighting to create a visually appealing environment
+- **Model Loading**: Loads GLTF models for plants via GLTFLoader
+- **Controls**: 
+  - OrbitControls for camera navigation (zoom, pan, rotate)
+  - DragControls for interactive plant positioning
+
+### 9.2 Tone.js (Audio Synthesis)
+
+Tone.js provides the audio capabilities of the application:
+
+- **Synth Creation**: Creates synthesizers for each plant/note in the garden
+- **Sequencing**: Uses Tone.Sequence to create looping patterns based on plant positions
+- **Effects**: Applies audio effects such as filters and delay to shape the sound
+- **Transport Control**: Manages the start/stop/tempo of the audio playback
+- **Scheduling**: Precisely schedules notes based on the garden's temporal grid
+
+## 10. Audio Parameters
+
+Each plant in the garden has audio parameters that affect how it sounds:
+
+- **filterFreq**: Frequency value (in Hz) for a lowpass filter applied to the plant's sound
+  - Higher values (e.g., 800Hz) allow more high frequencies through, creating brighter sounds
+  - Lower values (e.g., 200Hz) filter out high frequencies, creating darker, more muffled sounds
+  
+- **delayFeedback**: Amount of feedback in the delay effect (echo)
+  - Values range from 0 to 1
+  - Higher values (e.g., 0.7) create more pronounced echoes that repeat for longer
+  - Lower values (e.g., 0.1) create subtle, quickly fading echoes
+  - Default is typically 0.3, creating a moderate echo effect
+
+These parameters can be adjusted when adding or editing plants, allowing for customization of the garden's soundscape.
+
+## 11. Plant Model System
+
+The application features at least 17 different plant models (indexed from 1-17) that users can place in their gardens. Each model:
+
+- Has a unique 3D appearance loaded from GLTF files in the `/public/3dassets/` directory
+- May be associated with different sound characteristics
+- Can be scaled using the `scale` property (x, y, z dimensions)
+- Is positioned on a grid where:
+  - `track` represents the vertical position (row)
+  - `step` represents the horizontal position (column/time step)
+
+Plant models are categorized into approximately:
+- Large plants (plantModelIndex: 1-10) - scaled larger by default (2.3x)
+- Small plants/flowers (plantModelIndex: 11-17) - scaled smaller by default (1.5x)
+
+The combination of plant types, positions, and audio parameters creates the unique visual and auditory experience of each garden.
+
+## 12. API Endpoints
+
+### 12.1 Garden Data API
+
+- `POST /api/garden`: 
+  - Purpose: Save the current state of a user's garden
+  - Authentication: Requires login
+  - Request body: `{ plants: [...], tempo: number }`
+  - Response: JSON `{ message: string }`
+
+- `GET /api/gardens`:
+  - Purpose: Fetch all gardens (used by the Explore page)
+  - Authentication: None required
+  - Response: JSON array of garden metadata (id, username, plantsCount, etc.)
+
+- `GET /api/gardens/:id`:
+  - Purpose: Fetch a specific garden by user ID
+  - Authentication: None required
+  - Response: JSON with complete garden data including plants and tempo
+
+### 12.2 Authentication API
+
+- `POST /authenticate`:
+  - Purpose: User login
+  - Request body: `{ username: string, password: string }`
+  - Response: Redirects to /mygarden or originally requested URL
+
+- `POST /register`:
+  - Purpose: User registration
+  - Request body: `{ username: string, password: string, confirmpassword: string }`
+  - Response: Redirects to /mygarden or renders register.ejs with error
+
+## 13. User Interface Elements
+
+The garden interface includes several interactive elements:
+
+- **Play Button**: Toggles the audio playback on/off
+  - When pressed, it starts the Tone.js transport, playing the garden's music
+  - When already playing, it stops the audio
+
+- **Tempo Slider**: Controls the speed of the musical loop
+  - Range: 40-240 BPM (beats per minute)
+  - Default value is set to the garden's saved tempo or 80 BPM if new
+  - Changes take effect immediately during playback
+
+- **Plant a Random Note Button**: (Only in editable mode)
+  - Adds a new plant at a random position in the garden
+  - Assigns random audio parameters and a random plant model
+  - The new plant becomes part of the musical loop
+
+- **Save Button**: (Only in editable mode)
+  - Sends the current garden state to the server via the `/api/garden` endpoint
+  - Shows a "Saved!" notification when successful
+
+- **Navigation Controls**:
+  - Back to Home: Returns to the homepage
+  - Explore: Opens the Explore page to browse other gardens
