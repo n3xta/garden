@@ -10,6 +10,12 @@
       var preloader = document.createElement('div');
       preloader.className = 'page-preloader';
       
+      // 添加loading文字
+      var loadingText = document.createElement('div');
+      loadingText.className = 'loading-text';
+      loadingText.textContent = 'loading...';
+      preloader.appendChild(loadingText);
+      
       // 始终将遮罩插入为body的第一个子元素
       if (document.body.firstChild) {
         document.body.insertBefore(preloader, document.body.firstChild);
@@ -53,8 +59,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.location.pathname.includes('/view') || 
                     window.location.pathname.includes('/mygarden');
                     
+  var isIndexPage = window.location.pathname === '/' || 
+                   window.location.pathname === '/index.html';
+                   
+  var isAuthPage = window.location.pathname.includes('/login') || 
+                  window.location.pathname.includes('/register');
+                    
   console.log('当前页面:', window.location.pathname);
   console.log('检测为Garden页面:', isGardenPage);
+  console.log('检测为首页:', isIndexPage);
+  console.log('检测为认证页面:', isAuthPage);
                     
   // 获取预加载遮罩元素
   var preloader = document.querySelector('.page-preloader');
@@ -78,11 +92,23 @@ document.addEventListener('DOMContentLoaded', function() {
   var pageIsEntering = sessionStorage.getItem('pageIsEntering');
   console.log('SessionStorage pageIsEntering值:', pageIsEntering);
   
-  // garden页面需要特殊处理 - 强制执行ink out效果
-  if (isGardenPage) {
-    console.log('Garden页面 - 强制启用Ink Out效果');
-    // 如果是Garden页面，不管sessionStorage如何，都尝试执行ink out动画
+  // 如果是认证页面（login/register），无需特殊处理，直接移除预加载遮罩
+  if (isAuthPage) {
+    console.log('认证页面 - 不使用ink效果');
+    removePreloader();
+    return; // 提前退出，不执行后续代码
+  }
+  
+  // 如果是首页或Garden页面需要特殊处理 - 强制执行ink out效果
+  if (isGardenPage || isIndexPage) {
+    console.log((isGardenPage ? 'Garden' : 'Index') + '页面 - 强制启用Ink Out效果');
+    // 不管sessionStorage如何，都尝试执行ink out动画
     initInkOutAnimation(true);
+    
+    // 如果是首页，预加载login和register页面资源
+    if (isIndexPage) {
+      preloadAuthResources();
+    }
   } else if (pageIsEntering === 'true') {
     // 其他页面正常处理
     body.classList.add('has-ink-transition'); // 临时隐藏页面内容
@@ -126,6 +152,64 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
+  // 预加载认证页面所需资源
+  function preloadAuthResources() {
+    console.log('预加载登录/注册页面资源');
+    
+    // 预加载图片
+    var imagesToPreload = [
+      '/img/login_form.png',
+      '/img/save.png',
+      '/img/letter.png',
+      '/img/login.png',
+      '/img/signup.png'
+    ];
+    
+    imagesToPreload.forEach(function(src) {
+      var img = new Image();
+      img.src = src;
+    });
+    
+    // 预加载音频文件
+    if (typeof AudioEffects !== 'undefined') {
+      // 如果音频模块已加载，使用它预加载
+      AudioEffects.preload(['/samples/ui/click.wav']);
+    } else {
+      // 如果音效模块未加载，使用原生Audio API
+      var audio = new Audio();
+      audio.preload = 'auto';
+      audio.src = '/samples/ui/click.wav';
+    }
+    
+    // 预加载JS
+    var scriptsToPreload = [
+      '/js/auth.js',
+      '/lib/vanilla-tilt.js'
+    ];
+    
+    scriptsToPreload.forEach(function(src) {
+      var script = document.createElement('script');
+      script.src = src;
+      script.async = true;
+      script.rel = 'preload';
+      script.as = 'script';
+      document.head.appendChild(script);
+    });
+    
+    // 预加载CSS
+    var cssToPreload = [
+      '/css/auth.css'
+    ];
+    
+    cssToPreload.forEach(function(href) {
+      var link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'style';
+      link.href = href;
+      document.head.appendChild(link);
+    });
+  }
+  
   // Add click event listeners to all links that should have transition
   var transitionLinks = document.querySelectorAll('[data-transition="true"]');
   console.log('Transition links found:', transitionLinks.length);
@@ -145,6 +229,13 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Starting transition to:', url);
     if (!transitionLayer || !transitionBackground) {
       console.error('Cannot start transition - elements not found');
+      window.location.href = url; // 直接跳转
+      return;
+    }
+    
+    // 如果目标是login或register，不使用墨水特效
+    if (url.includes('/login') || url.includes('/register')) {
+      console.log('跳转到认证页面 - 不使用ink效果');
       window.location.href = url; // 直接跳转
       return;
     }
@@ -207,6 +298,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // Garden页面可能有复杂的3D加载，使用更长的延迟
         console.log('Garden页面 - 使用额外延迟等待3D内容加载');
         setTimeout(resolve, 2000); // 给3D内容更多加载时间
+      } else if (isIndexPage && forceAnimation) {
+        // 首页也需要足够时间加载和预加载资源
+        console.log('首页 - 使用延迟等待资源加载');
+        setTimeout(resolve, 1500);
       } else if (document.readyState === 'complete') {
         resolve();
       } else {

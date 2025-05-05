@@ -288,3 +288,66 @@ The garden interface includes several interactive elements:
 - **Navigation Controls**:
   - Back to Home: Returns to the homepage
   - Explore: Opens the Explore page to browse other gardens
+
+## 14. Page Transition System
+
+The application features a custom ink-based page transition effect that provides a smooth visual transition between different pages.
+
+### 14.1 Implementation Overview
+
+The transition system consists of two main components:
+
+- **Page Preloader**: An overlay shown immediately when a page begins loading to prevent content flickering
+- **Transition Layer**: An ink effect animation that transitions between pages using a sprite sheet animation
+
+The system is implemented with the following files:
+- `public/js/transition.js`: Core JavaScript that handles transition logic
+- `public/css/transition.css`: Styling for transition elements and animations
+- `public/img/ink.png`: Sprite sheet used for the ink animation (contains 25 frames)
+
+### 14.2 Transition Flow
+
+The page transition follows this general flow:
+
+1. **Initial Page Load**:
+   - A preloader overlay is immediately shown (highest z-index)
+   - The transition layer is prepared for an "ink out" animation if coming from another page
+   - Page content is initially hidden with CSS
+
+2. **Exiting a Page (Ink In)**:
+   - User clicks a link with `data-transition="true"` attribute
+   - An audio effect plays based on the destination page
+   - The transition layer becomes visible with the "opening" animation (ink spreading)
+   - Once animation completes, navigation to the new URL occurs
+   - A flag is set in sessionStorage to indicate the next page should start with "ink out"
+
+3. **Entering a Page (Ink Out)**:
+   - The preloader is still visible, preventing content flash
+   - If sessionStorage indicates an incoming transition, the ink layer starts fully covering the screen
+   - Once page content is loaded, the preloader fades out
+   - The "closing" animation plays (ink receding)
+   - Page content becomes visible
+
+### 14.3 Technical Details
+
+- **Session Persistence**: Uses `sessionStorage.setItem('pageIsEntering', 'true')` to communicate transition state between pages
+- **Animation Implementation**: CSS animations with steps() function to create sprite sheet frame-by-frame animation
+- **Garden Page Special Handling**: Garden pages use additional delays to accommodate 3D content loading
+- **Responsive Design**: Calculates appropriate dimensions for the transition layer based on window size and sprite aspect ratio
+- **Audio Integration**: Plays specific sound effects during transitions (`/samples/ui/explore.wav`, `/samples/ui/garden.wav`)
+
+### 14.4 Transition CSS Techniques
+
+- Black filtering of the ink sprite using `filter: brightness(0) contrast(1000%)`
+- CSS animations for sequenced sprite sheet playback
+- CSS class-based state management (visible, opening, closing)
+- Strategic opacity transitions to prevent content flashing
+
+### 14.5 Usage
+
+To enable transitions on a link:
+```html
+<a href="/destination" data-transition="true">Link Text</a>
+```
+
+The transition system automatically handles the rest, providing a consistent visual effect when navigating between pages.

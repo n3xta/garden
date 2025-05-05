@@ -10,6 +10,17 @@ body.js-loading-ready {
   visibility: visible;
 }
 
+@font-face {
+  font-family: 'PPPangaia';
+  src: url('/fonts/PPPangaia-Bold.otf') format('opentype');
+  font-weight: bold;
+}
+@font-face {
+  font-family: 'PPPangaia';
+  src: url('/fonts/PPPangaia-Ultralight.otf') format('opentype');
+  font-weight: 100;
+}
+
 /* 预加载遮罩 - 在页面加载时立即显示 */
 .page-preloader {
   position: fixed;
@@ -23,6 +34,25 @@ body.js-loading-ready {
   visibility: visible !important; /* 强制可见 */
   transition: opacity 0.3s;
   pointer-events: auto; /* 防止点击穿透 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 添加loading文字样式 */
+.loading-text {
+  font-family: 'PPPangaia', sans-serif;
+  color: #fff;
+  font-size: 18px;
+  letter-spacing: 3px;
+  opacity: 0.8;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
 }
 
 .page-preloader.fade-out {
