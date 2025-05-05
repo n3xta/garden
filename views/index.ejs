@@ -5,15 +5,20 @@
   <title>The Garden is a Loop</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="/css/main.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 </head>
-<body>
-  <div class="background full-page-bg" data-tilt data-tilt-full-page-listening></div>
+<body class="index-page">
+  <div class="background full-page-bg" data-tilt data-tilt-max="1" data-tilt-speed="1" data-tilt-perspective="1000" data-tilt-scale="1" data-tilt-full-page-listening></div>
   <% if (user) { %>
-    <div class="welcome-message parallax-item" style="display: block;" data-tilt data-tilt-scale="1.1">
-      welcome, <span class="username"><%= user.username %></span>
+    <div class="welcome-container">
+      <div class="welcome-message parallax-item show" data-tilt data-tilt-max="10" data-tilt-speed="1" data-tilt-perspective="1000" data-tilt-scale="1.03">
+        welcome, <span class="username"><%= user.username %></span>
+      </div>
     </div>
   <% } else { %>
-    <img src="/2dassets/letter.png" class="letter parallax-item" alt="Letter" data-tilt data-tilt-scale="1.1">
+    <div class="letter-container">
+      <img src="/2dassets/letter.png" class="letter parallax-item" alt="Letter" data-tilt data-tilt-max="10" data-tilt-speed="1" data-tilt-perspective="1000" data-tilt-scale="1.03">
+    </div>
   <% } %>
   
   <!-- Auth bookmarks -->
@@ -47,6 +52,5 @@
   
   <script src="/lib/vanilla-tilt.js"></script>
   <script src="/js/main.js"></script>
-  <script src="/js/auth.js"></script>
 </body>
 </html>

@@ -5,13 +5,14 @@
   <title>Login - The Garden is a Loop</title>
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/auth.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 </head>
 <body class="auth-page">
-  <div class="background full-page-bg" data-tilt data-tilt-full-page-listening></div>
+  <div class="background full-page-bg" data-tilt data-tilt-max="1" data-tilt-speed="1" data-tilt-perspective="1000" data-tilt-scale="1" data-tilt-full-page-listening></div>
 
   <div class="form-wrapper show-form">
     <div class="form-container login-form">
-      <div data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-perspective="500" data-tilt-scale="1.1" class="tilt-container parallax-container">
+      <div data-tilt data-tilt-max="10" data-tilt-speed="1" data-tilt-perspective="1000" data-tilt-scale="1.03" class="tilt-container parallax-container">
         <img src="/2dassets/login_form.png" class="form-image show-image parallax-item" alt="Login Form">
         <div class="input-overlay show-inputs parallax-item">
           <form id="login-form" method="POST" action="/authenticate"> 
@@ -20,7 +21,9 @@
               <% } %>
             <input type="text" id="login-username" name="username" placeholder="username" class="username-field input-field" required>
             <input type="password" id="login-password" name="password" placeholder="password" class="password-field input-field" required>
-            <input type="submit" id="login-submit" name="submitbutton" value="login" class="submit-btn">
+            <button type="submit" id="login-submit" name="submitbutton" class="img-submit-btn">
+              <img src="/2dassets/save.png" alt="Login" class="submit-img">
+            </button>
           </form>
           <a href="/register" class="form-link signup-link">Don't have an account? Sign up</a>
         </div>
@@ -31,6 +34,6 @@
   <a href="/" class="home-link">Home</a>
 
   <script src="/lib/vanilla-tilt.js"></script>
-  <script src="/js/auth.js"></script>
+  <script src="/js/main.js"></script>
 </body>
 </html>

@@ -1,14 +1,48 @@
+/* 确保整个页面没有白边 */
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  background-color: #000; /* 黑色背景，这样即使露出一点边缘也不明显 */
+}
+
 .background {
   position: fixed;
-  top: -20px;
-  left: -20px;
-  width: calc(150% + 40px);
-  height: calc(150% + 40px);
+  top: -100px; /* 增加负边距以提供更多出血区域 */
+  left: -100px; /* 增加负边距以提供更多出血区域 */
+  width: calc(100% + 200px); /* 增加宽度 */
+  height: calc(100% + 200px); /* 增加高度 */
   z-index: -1;
   background: url('/2dassets/main_bg.png') no-repeat center center;
   background-size: cover;
   opacity: 1;
   will-change: transform;
+}
+
+/* 同样的放大样式应用于auth页面的木质背景 */
+.auth-page .background {
+  top: -100px;
+  left: -100px;
+  width: calc(100% + 200px);
+  height: calc(100% + 200px);
+  background-image: url('/2dassets/wood.jpg') !important;
+  background-size: cover;
+  opacity: 1 !important;
+}
+
+/* 木质背景过渡层也需要相同的尺寸 */
+.transition-overlay {
+  position: fixed;
+  bottom: -100%; /* Start from below the viewport */
+  left: -100px;
+  width: calc(100% + 200px);
+  height: calc(100% + 200px);
+  z-index: 999;
+  background: url('/2dassets/wood.jpg') no-repeat center center;
+  background-size: cover;
+  transition: bottom 1s cubic-bezier(0.19, 1, 0.22, 1); /* Exponential decrease curve */
 }
 
 @font-face {
@@ -30,15 +64,31 @@ body {
   padding: 0;
 }
 
-.letter {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+/* 使用不同的方式居中元素，避免与tilt效果冲突 */
+.letter-container,
+.welcome-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   z-index: 2;
-  max-width: 90vw;
-  max-height: 90vh;
+  pointer-events: none; /* 允许点击穿透到下面的元素 */
+}
+
+.letter,
+.welcome-message {
+  /* 移除冲突的transform */
+  position: relative; /* 改为相对定位 */
+  margin: 0;
+  padding: 0;
+  max-width: 80vw;
+  max-height: 80vh;
   will-change: transform;
+  pointer-events: auto; /* 确保元素本身可点击 */
 }
 
 .bookmark {
@@ -101,20 +151,6 @@ body {
 } 
 
 /* Specific styles for the index page */
-
-.welcome-message {
-  position: fixed;
-  top: 48%;
-  left: 48%;
-  transform: translate(-50%, -50%);
-  z-index: 2;
-  font-family: 'PPPangaia', sans-serif;
-  font-size: 3rem;
-  color: white;
-  text-align: center;
-  display: none;
-  will-change: transform;
-}
 
 .welcome-message .username {
   font-weight: bold;
@@ -215,13 +251,15 @@ body {
 }
 
 .exit-up {
-  animation: slideUp 0.6s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  animation: slideUp 0.35s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  will-change: transform, opacity;
 }
 
 .enter-from-below {
   animation: slideDown 0.6s cubic-bezier(0.65, 0, 0.35, 1) forwards;
   transform: translateY(50vh);
   opacity: 0;
+  will-change: transform, opacity;
 }
 
 /* Positioning for the switching forms */
@@ -251,4 +289,52 @@ body {
 .input-field:focus {
   outline: 2px solid #4a6741;
   box-shadow: 0 0 5px rgba(74, 103, 65, 0.5);
+}
+
+/* 适配不同视口尺寸 */
+@media screen and (max-width: 768px) {
+  .background, 
+  .auth-page .background,
+  .transition-overlay {
+    /* 在小屏幕上增加更多出血区域 */
+    top: -150px;
+    left: -150px;
+    width: calc(100% + 300px);
+    height: calc(100% + 300px);
+  }
+}
+
+/* 禁用iOS页面弹性滚动 */
+html {
+  position: fixed;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* 特定页面背景颜色 */
+.index-page {
+  background-color: #000; /* 确保首页背景为黑色 */
+}
+
+/* 为index页面背景额外增加出血区域 */
+.index-page .background {
+  position: fixed;
+  top: -200px !important; /* 为index页面提供比其他页面更多的出血区域 */
+  left: -200px !important;
+  width: calc(100% + 400px) !important; /* 显著加大背景尺寸 */
+  height: calc(100% + 400px) !important;
+  z-index: -1;
+  background: url('/2dassets/main_bg.png') no-repeat center center;
+  background-size: cover;
+  opacity: 1;
+  will-change: transform;
+}
+
+/* 恢复welcome-message的样式 */
+.welcome-message {
+  font-family: 'PPPangaia', sans-serif;
+  font-size: 3rem;
+  color: white;
+  text-align: center;
+  display: none; /* 初始隐藏，通过JS或inline样式显示 */
 } 
