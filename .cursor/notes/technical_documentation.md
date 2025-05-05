@@ -111,6 +111,7 @@ Based on `server.js` logic and `database.txt` contents, user documents likely fo
         "plantModelIndex": Number, // Index referencing a specific 3D plant model
         "audioParams": {
           "filterFreq": Number, // Audio filter frequency
+          "chorusDepth": Number, // Audio chorus effect depth
           "delayFeedback": Number // Audio delay feedback amount
         },
         "scale": {
@@ -200,19 +201,48 @@ Tone.js provides the audio capabilities of the application:
 
 ## 10. Audio Parameters
 
-Each plant in the garden has audio parameters that affect how it sounds:
+Each plant in the garden has audio parameters that affect how it sounds. Plants start with clean audio (no effects) by default, and effects are only applied when the user manually scales the plant:
 
 - **filterFreq**: Frequency value (in Hz) for a lowpass filter applied to the plant's sound
-  - Higher values (e.g., 800Hz) allow more high frequencies through, creating brighter sounds
-  - Lower values (e.g., 200Hz) filter out high frequencies, creating darker, more muffled sounds
+  - Default is 0 (no filtering effect at scale=1.0)
+  - Higher values (e.g., 3000Hz) allow more high frequencies through, creating brighter sounds
+  - Controlled by scaling the plant along the X-axis
+  
+- **chorusDepth**: Amount of chorus effect (voice doubling/thickening)
+  - Default is 0 (no chorus effect at scale=1.0)
+  - Higher values (e.g., 0.9) create a more pronounced chorus/ensemble effect
+  - Controlled by scaling the plant along the Y-axis
   
 - **delayFeedback**: Amount of feedback in the delay effect (echo)
-  - Values range from 0 to 1
-  - Higher values (e.g., 0.7) create more pronounced echoes that repeat for longer
-  - Lower values (e.g., 0.1) create subtle, quickly fading echoes
-  - Default is typically 0.3, creating a moderate echo effect
+  - Default is 0 (no delay/echo at scale=1.0)
+  - Values range from 0 to 0.7
+  - Higher values create more pronounced echoes that repeat for longer
+  - Controlled by scaling the plant along the Z-axis
 
-These parameters can be adjusted when adding or editing plants, allowing for customization of the garden's soundscape.
+- **gain**: Overall volume reduction
+  - Fixed at 0.3 (30% of original volume) for all plants
+  - Helps prevent audio clipping and creates a more balanced mix
+
+### 10.1 Scale-to-Effect Mapping
+
+The system uses a specialized mapping function that:
+1. Ensures plants at default scale (1.0) have no audio effects
+2. Maps increased scale values (1.0-2.0) to proportional effect parameter increases
+3. Provides "dead zone" tolerance (±0.05) around the default scale to ensure clean audio
+
+When a plant is edited (by dragging the colored handles), its scaling affects the audio parameters:
+- Red handle (X-axis): Controls filter frequency
+- Green handle (Y-axis): Controls chorus depth
+- Blue handle (Z-axis): Controls delay feedback
+
+### 10.2 Audio Signal Chain
+
+Each plant has its own independent audio chain:
+```
+Sampler → Filter → Chorus → Delay → Gain → Destination
+```
+
+This isolation allows each plant to have unique sound characteristics that are preserved when saved and reloaded.
 
 ## 11. Plant Model System
 
@@ -372,3 +402,45 @@ To exclude a link from using the ink transition (e.g., for authentication pages)
 ```html
 <a href="/login">Login</a>  <!-- No data-transition attribute -->
 ```
+
+## 15. Ambient Sound System
+
+The garden interface includes an ambient sound selector that allows users to play background ambient sounds while interacting with their garden.
+
+### 15.1 Implementation Overview
+
+The ambient sound system consists of:
+
+- A column of icons in the top-left corner of the garden view
+- Each icon represents a different ambient sound loop
+- The last icon allows turning off all ambient sounds
+
+The system is implemented with the following files:
+- `public/js/ambient-sound.js`: JavaScript that manages ambient sound playback
+- `public/css/ambient-selector.css`: Styling for the ambient sound selector interface
+- `public/samples/ambient/*.wav`: The ambient sound files (1.wav through 4.wav)
+- `public/img/ambient*.png` and `public/img/no_ambient.png`: Icons for the selector
+
+### 15.2 Key Features
+
+- **Independent Audio System**: The ambient sounds operate separately from the plant audio system
+- **User Selection**: Users can choose between different ambient soundscapes
+- **Visual Feedback**: The currently active ambient sound icon is highlighted
+- **Browser Compatibility**: Handles autoplay restrictions by waiting for user interaction
+- **Tone.js Integration**: Coordinates with Tone.js audio context startup
+
+### 15.3 Technical Details
+
+- **Audio Implementation**: Uses the native Web Audio API through HTML5 Audio element
+- **Loop Playback**: Ambient sounds play in a continuous loop
+- **Volume Control**: Fixed at 40% volume to blend well with plant sounds
+- **Exclusive Selection**: Only one ambient sound can play at a time
+- **Initial State**: Starts with no ambient sound selected
+
+### 15.4 User Interaction Flow
+
+1. User clicks on an ambient sound icon
+2. If another ambient sound is playing, it is stopped
+3. The selected ambient sound begins playing on loop
+4. The icon becomes visually highlighted
+5. If the "no ambient" icon is clicked, all ambient sounds stop

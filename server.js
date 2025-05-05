@@ -199,36 +199,17 @@ app.get("/mygarden", (req, res) => {
       user.backgroundId = backgroundId; // 更新当前用户对象
     }
 
-    // Check if the user has a garden object. If not, create and save a default one.
-    if (!user.garden) {
-      console.log(`User ${user.username} (${userId}) missing garden data. Creating default.`);
-      const defaultGarden = { plants: [], tempo: 80 };
-      
-      database.update({ _id: userId }, { $set: { garden: defaultGarden } }, {}, (updateErr, numReplaced) => {
-        if (updateErr) {
-          console.error("Database error updating user with default garden:", updateErr);
-          return res.status(500).send("Server error initializing garden.");
-        }
-        if (numReplaced === 0) {
-          console.error("Failed to update user with default garden (user not found?):". userId);
-          // Should ideally not happen if we found the user above
-          return res.status(500).send("Server error initializing garden.");
-        }
-        // Render the garden page with the newly created default garden data
-        res.render('garden.ejs', { 
-          user: { username: req.session.username }, // Pass username from session
-          gardenData: defaultGarden, // Pass the default garden data
-          backgroundId: user.backgroundId // 传递背景ID
-        });
-      });
-    } else {
-      // User has garden data, render the garden page with it
-      res.render('garden.ejs', { 
-        user: { username: req.session.username }, // Pass username from session
-        gardenData: user.garden, // Pass the user's garden data
-        backgroundId: user.backgroundId // 传递背景ID
-      });
-    }
+    // Extract garden data or initialize if not present
+    const gardenData = user.garden || { plants: [], tempo: 80 };
+    
+    // Render the garden page with user's data
+    res.render('garden.ejs', { 
+      user: { username: user.username },
+      gardenData: gardenData,
+      isReadOnly: false, // User can edit their own garden
+      backgroundId: user.backgroundId,
+      gardenName: user.gardenName // Pass garden name to the template
+    });
   });
 });
 
@@ -383,10 +364,47 @@ app.post("/api/garden", (req, res) => { // No need for express.json() here if ap
     });
 });
 
+// API endpoint for saving garden name
+app.post("/api/garden/name", (req, res) => {
+    // Check if user is logged in
+    if (!req.session.userId) {
+        return res.status(401).json({ message: "Unauthorized: Please log in to save." });
+    }
+
+    const userId = req.session.userId;
+    const { name } = req.body;
+
+    // Basic validation
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+        return res.status(400).json({ message: "Invalid garden name." });
+    }
+
+    // Sanitize the name (remove excessive whitespace and limit length)
+    const sanitizedName = name.trim().substring(0, 50);
+
+    // Update the user's document with the new garden name
+    database.update({ _id: userId }, { $set: { gardenName: sanitizedName } }, {}, (err, numReplaced) => {
+        if (err) {
+            console.error(`Database error saving garden name for user ${userId}:`, err);
+            return res.status(500).json({ message: "Server error saving garden name." });
+        }
+
+        if (numReplaced === 0) {
+            // User document not found (shouldn't happen if session is valid)
+            console.error(`Failed to save garden name, user not found: ${userId}`);
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        console.log(`Garden name saved for user ${req.session.username} (${userId}): "${sanitizedName}"`);
+        // Send success JSON response
+        res.status(200).json({ message: "Garden name saved successfully!", name: sanitizedName }); 
+    });
+});
+
 // NEW: API endpoint to fetch all gardens
 app.get("/api/gardens", (req, res) => {
   // Find all users with garden data
-  database.find({ garden: { $exists: true } }, { username: 1, garden: 1, createdAt: 1, backgroundId: 1 }, (err, users) => {
+  database.find({ garden: { $exists: true } }, { username: 1, garden: 1, createdAt: 1, backgroundId: 1, gardenName: 1 }, (err, users) => {
     if (err) {
       console.error("Database error fetching gardens:", err);
       return res.status(500).json({ error: "Error loading gardens" });
@@ -474,12 +492,13 @@ app.get("/view/:id", (req, res) => {
       gardenData: userData.garden, // Pass the garden data
       isReadOnly: true, // Set read-only flag
       visitorName: user ? user.username : null, // Pass visitor name if logged in
-      backgroundId: userData.backgroundId // 传递背景ID
+      backgroundId: userData.backgroundId, // 传递背景ID
+      gardenName: userData.gardenName // Pass garden name to the template
     });
   });
 });
 
-app.listen(6001, () => {
+app.listen(6001, '0.0.0.0', () => {
   // you can access your dev code via one of two URLs you can copy into the browser
   // http://127.0.0.1:6001/
   // http://localhost:6001/

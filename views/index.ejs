@@ -14,13 +14,13 @@
   <div class="background full-page-bg" data-tilt data-tilt-max="1" data-tilt-speed="1" data-tilt-perspective="1000" data-tilt-scale="1" data-tilt-full-page-listening></div>
   <% if (user) { %>
     <div class="welcome-container">
-      <div class="welcome-message parallax-item show" data-tilt data-tilt-max="10" data-tilt-speed="1" data-tilt-perspective="1000" data-tilt-scale="1.03">
+      <div class="welcome-message parallax-item show" data-tilt data-tilt-max="10" data-tilt-speed="1" data-tilt-perspective="1000" data-tilt-scale="1.03" data-tilt-reset="false">
         welcome, <span class="username"><%= user.username %></span>
       </div>
     </div>
   <% } else { %>
     <div class="letter-container">
-      <img src="/img/letter.png" class="letter parallax-item" alt="Letter" data-tilt data-tilt-max="10" data-tilt-speed="1" data-tilt-perspective="1000" data-tilt-scale="1.03">
+      <img src="/img/letter.png" class="letter parallax-item" alt="Letter" data-tilt data-tilt-max="10" data-tilt-speed="1" data-tilt-perspective="1000" data-tilt-scale="1.03" data-tilt-reset="false">
     </div>
   <% } %>
   
