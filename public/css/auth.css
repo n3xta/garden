@@ -1,12 +1,21 @@
 /* Styling for dedicated Login/Register pages */
+@font-face {
+  font-family: 'PPPangaia';
+  src: url('/fonts/PPPangaia-Bold.otf') format('opentype');
+  font-weight: bold;
+}
+@font-face {
+  font-family: 'PPPangaia';
+  src: url('/fonts/PPPangaia-Ultralight.otf') format('opentype');
+  font-weight: 100;
+}
+
 
 body.auth-page {
-  font-family: sans-serif;
+  font-family: 'PPPangaia', sans-serif;
   overflow: hidden; /* Prevent scrollbars when forms extend beyond viewport */
   background-color: #000; /* 确保auth页面背景也是黑色 */
 }
-
-/* 移除重复的背景定义，使用main.css中的通用定义 */
 
 .form-wrapper {
   position: fixed;
@@ -52,19 +61,25 @@ body.auth-page {
 .input-overlay {
   position: absolute;
   top: 0; 
-  left: 0;
+  left: 0px;
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center; 
+  justify-content: flex-start; /* Change from center to flex-start to allow padding-top to work */
   align-items: center;
-  padding: 20px; /* Add padding */
+  /* padding: 20px; Add padding */
+  padding-top: 260px; /* Position inputs 300px from the top */
   box-sizing: border-box;
   text-align: center; 
   transform-style: preserve-3d; /* Ensure 3D space is preserved */
   pointer-events: none; /* Allow clicks to pass through to the tilt element */
-  transform: translateZ(40px); /* 为输入框添加3D效果 */
+  /* transform: translateZ(40px); 为输入框添加3D效果 */
+  /* 完全移除所有边框 */
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
 }
 
 /* Make form elements clickable */
@@ -75,20 +90,20 @@ body.auth-page {
 .input-overlay .submit-btn {
   pointer-events: auto;
   position: relative; /* Ensure they're above the form image */
-  z-index: 2; /* Higher than form image */
+  z-index: 0; /* Higher than form image */
 }
 
 /* Adjust positioning based on your form images */
 .login-form .input-overlay {
   /* Example: slightly different layout for login */
-   justify-content: flex-end; /* Push to bottom */
-   padding-bottom: 70px; /* Adjusted for smaller form */
+  justify-content: flex-start; /* Change from flex-end to flex-start */
+  padding-bottom: 0; /* Remove bottom padding */
 }
 
 .signup-form .input-overlay {
   /* Example: slightly different layout for signup */
-  justify-content: flex-end; /* Push to bottom */
-  padding-bottom: 50px; /* Adjusted for smaller form */
+  justify-content: flex-start; /* Change from flex-end to flex-start */
+  padding-bottom: 0; /* Remove bottom padding */
 }
 
 
@@ -97,17 +112,77 @@ body.auth-page {
     margin-bottom: 20px;
 }
 
+/* Ensure form uses flex column layout to stack inputs vertically */
+.input-overlay form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
 .input-overlay input[type="text"],
 .input-overlay input[type="password"] {
-  width: 70%; /* Adjust width */
+  width: 30%; /* Adjust width */
   padding: 10px;
-  margin-bottom: 12px; /* Reduced spacing */
-  border: 1px solid #ccc;
+  margin-bottom: 12px; /* Default spacing - will be overridden for specific elements */
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.8);
   font-size: 0.95em; /* Slightly smaller text */
   transform-style: preserve-3d; /* Ensure 3D space is preserved */
   position: relative; /* Ensure they're above the form image */
+  /* 使输入框半透明 */
+  background-color: rgba(255, 255, 255, 0);
+  /* Force inputs to be block-level to ensure they stack */
+  display: block;
+  /* Completely remove all borders */
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Remove focus outline */
+.input-overlay input[type="text"]:focus,
+.input-overlay input[type="password"]:focus {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Reset any browser-default styling */
+.input-overlay form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  border: none !important;
+  background: transparent;
+}
+
+/* Custom spacing for register page fields */
+#signup-username {
+  margin-left: -10px;
+  margin-bottom: 100px; /* Larger space after username field */
+}
+
+#signup-password {
+  margin-left: -10px;
+  margin-bottom: 5px; /* Smaller space after password field */
+}
+
+#signup-confirm {
+  margin-left: -10px;
+  margin-bottom: 250px; /* Add large space after confirm password field */
+}
+
+#login-username {
+  margin-left: -10px;
+  margin-bottom: 110px; /* Larger space after username field for login page too */
+}
+
+#login-password {
+  margin-left: -10px;
+  margin-bottom: 300px; /* Add large space after login password field */
 }
 
 /* 新的图片按钮样式 */
@@ -121,19 +196,44 @@ body.auth-page {
   z-index: 2;
   margin-top: 10px;
   transition: transform 0.3s ease;
+  /* 移除按钮 */
+  display: none;
 }
 
 .img-submit-btn:hover {
   transform: scale(1.05);
 }
 
+/* 新的保存按钮样式 - 放在右下角 */
+.save-btn-container {
+  position: absolute;
+  bottom: 200px;
+  right: 200px;
+  z-index: 10;
+  transform-style: preserve-3d;
+  /* transform: translateZ(20px); */
+  pointer-events: auto; /* Make it clickable */
+}
+
+.save-btn-container .submit-img {
+  width: 80px;
+  height: auto;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  /* transform: translateZ(60px); Increase Z translation for more pronounced effect */
+}
+
+.save-btn-container .submit-img:hover {
+  transform: scale(1.1) translateZ(60px);
+}
+
 .submit-img {
-  width: 120px; /* 根据实际情况调整大小 */
+  width: 160px; /* 根据实际情况调整大小 */
   height: auto;
   transform: translateZ(5px); /* 添加轻微的3D效果 */
 }
 
-/* 保留旧的按钮样式以兼容性 */
+/* 保留旧的按钮样式以兼容性
 .submit-btn {
   padding: 8px 20px;
   background-color: #8FBC8F;
@@ -147,23 +247,26 @@ body.auth-page {
   transform-style: preserve-3d;
   position: relative;
   z-index: 2;
-}
+} */
 
-.submit-btn:hover {
+/* .submit-btn:hover {
   background-color: #7A9E7A;
-}
+} */
 
 .form-link {
   margin-top: 12px; /* Reduced spacing */
-  color: #333;
+  color: rgb(167, 12, 12);
   text-decoration: none;
-  font-size: 0.85em; /* Smaller text */
+  font-size: 1em; /* Smaller text */
   transform-style: preserve-3d; /* Ensure 3D space is preserved */
   position: relative; /* Ensure they're above the form image */
+  /* 使链接更明显 */
+  transition: transform 0.3s ease;
 }
 
 .form-link:hover {
   text-decoration: underline;
+  transform: scale(1.1) translateZ(60px);
 }
 
 .error-message {
@@ -171,7 +274,13 @@ body.auth-page {
     font-weight: bold;
     margin-bottom: 15px;
     transform-style: preserve-3d; /* Ensure 3D space is preserved */
-    position: relative; /* Ensure they're above the form image */
+    position: absolute; /* Change to absolute positioning */
+    top: -200px; /* Position 50px from the top of the PNG */
+    left: 0;
+    width: 100%; /* Full width */
+    text-align: center;
+    z-index: 10; /* Ensure it's above other elements */
+    pointer-events: none; /* Don't interfere with clicks */
 }
 
 /* 添加从EJS文件中整合的内联样式 */
@@ -203,6 +312,25 @@ body.auth-page {
 /* Hide home button */
 a[href="/"] {
   display: none !important;
+}
+
+/* Style the placeholder text */
+.input-overlay input::placeholder {
+  color: rgba(0, 0, 0, 0.4);
+  font-style: italic;
+  font-weight: 100;
+  transition: opacity 0.3s ease;
+}
+
+.input-overlay input:focus::placeholder {
+  opacity: 0.5;
+}
+
+/* Custom text color for inputs */
+.input-overlay input {
+  color: rgb(34, 34, 34);
+  text-align: center;
+  font-weight: 300;
 }
 
 /*
