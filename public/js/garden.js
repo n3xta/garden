@@ -1,3 +1,28 @@
+// 获取garden数据
+document.addEventListener('DOMContentLoaded', function() {
+  const gardenDataElement = document.getElementById('garden-data');
+  
+  if (gardenDataElement) {
+    // 解析garden数据
+    window.initialGardenData = JSON.parse(gardenDataElement.getAttribute('data-garden'));
+    window.isReadOnly = gardenDataElement.getAttribute('data-readonly') === 'true';
+    
+    // 检查transition状态
+    console.log("页面加载 - transition状态检查:");
+    console.log("- pageIsEntering值:", sessionStorage.getItem('pageIsEntering'));
+    console.log("- Transition层可见性:", document.querySelector('.cd-transition-layer').classList.contains('visible'));
+  } else {
+    console.error("Garden data element not found!");
+  }
+});
+
+// 页面完全加载后检查transition状态
+window.addEventListener('load', function() {
+  console.log("页面完全加载后 - transition状态:");
+  console.log("- Transition层可见性:", document.querySelector('.cd-transition-layer').classList.contains('visible'));
+  console.log("- Body类列表:", document.body.classList);
+});
+
 const TOTAL_BACKGROUNDS = 41;
 
 function getGardenBackgroundId() {

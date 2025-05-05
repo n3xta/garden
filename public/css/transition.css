@@ -1,0 +1,121 @@
+/* -------------------------------- 
+   Transition Layer Styles - 包括关键CSS和预加载遮罩
+-------------------------------- */
+/* 页面初始状态控制 - 防止闪烁 */
+html.loading, body.loading {
+  visibility: hidden; /* 初始隐藏所有内容 */
+}
+
+body.js-loading-ready {
+  visibility: visible;
+}
+
+/* 预加载遮罩 - 在页面加载时立即显示 */
+.page-preloader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+  z-index: 2147483647; /* 最大可能的z-index值，确保在所有元素之上 */
+  opacity: 1;
+  visibility: visible !important; /* 强制可见 */
+  transition: opacity 0.3s;
+  pointer-events: auto; /* 防止点击穿透 */
+}
+
+.page-preloader.fade-out {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.cd-transition-layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 999999; /* 确保高于所有元素 */
+  height: 100%;
+  width: 100%;
+  opacity: 0;
+  visibility: hidden;
+  overflow: hidden;
+  pointer-events: none; /* 防止阻止点击 */
+}
+
+.cd-transition-layer.visible {
+  opacity: 1;
+  visibility: visible !important; /* 强制可见 */
+  pointer-events: auto; /* 在动画期间阻止点击 */
+}
+
+.cd-transition-layer .bg-layer {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translateY(-50%) translateX(-2%);
+  /* dimensions will be overwritten using JavaScript */
+  height: 100%;
+  /* sprite is composed of 25 frames */
+  width: 2500%;
+  background: url(../img/ink.png) no-repeat 0 0;
+  background-size: 100% 100%;
+  
+  /* 方法1: 强力黑色滤镜 */
+  filter: brightness(0) contrast(1000%);
+  
+  /* 方法2: 黑色蒙版方式（如果方法1效果不理想，可以取消这段注释，并注释掉方法1）
+  -webkit-mask-image: url(../img/ink.png);
+  -webkit-mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-image: url(../img/ink.png);
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  background: #000; 
+  */
+}
+
+.cd-transition-layer.opening .bg-layer {
+  animation: cd-sequence 0.8s steps(24);
+  animation-fill-mode: forwards;
+}
+
+.cd-transition-layer.closing .bg-layer {
+  animation: cd-sequence-reverse 0.8s steps(24);
+  animation-fill-mode: forwards;
+}
+
+/* 美化过渡体验 */
+body {
+  opacity: 1;
+  transition: opacity 0.1s;
+}
+
+/* 在进入页面时，先隐藏内容，等墨水效果完成后再显示 */
+body.has-ink-transition {
+  opacity: 0;
+}
+
+body.ink-transition-complete {
+  opacity: 1;
+}
+
+@keyframes cd-sequence {
+  0% {
+    /* translateX(-2%) is used to horizontally center the first frame inside the viewport */
+    transform: translateY(-50%) translateX(-2%);
+  }
+  100% {
+    /* translateX(-98%) (2% + 96) is used to horizontally center the last frame inside the viewport */
+    transform: translateY(-50%) translateX(-98%);
+  }
+}
+
+@keyframes cd-sequence-reverse {
+  0% {
+    transform: translateY(-50%) translateX(-98%);
+  }
+  100% {
+    transform: translateY(-50%) translateX(-2%);
+  }
+} 

@@ -4,25 +4,29 @@
   <meta charset="UTF-8">
   <title>Garden</title>
 
+  <link rel="stylesheet" href="/css/garden.css">
+  <link rel="stylesheet" href="/css/transition.css">
+  
+  <!-- 预先加载transition.js以确保早于garden.js执行 -->
+  <script src="/js/transition.js"></script>
+  
+  <!-- 将这些库放在后面，避免阻塞transition的初始化 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three-gltf-loader@1.111.0/index.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.9/Tone.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/DragControls.js"></script>
-
-
-  <link rel="stylesheet" href="/css/garden.css">
 </head>
 
 <body>
   <!-- Back to Home button in the top left corner -->
-  <a href="/">
+  <a href="/" data-transition="true">
     <img src="/2dassets/back.png" class="back-button" alt="Back to Home">
   </a>
   
   <!-- Explore button -->
-  <a href="/explore">
+  <a href="/explore" data-transition="true">
     <img src="/2dassets/explore.png" class="explore-button" alt="Explore">
   </a>
 
@@ -38,7 +42,7 @@
   <div class="readonly-banner">
     <p>Viewing <strong><%= user.username %>'s</strong> garden</p>
     <% if (locals.visitorName) { %>
-    <a href="/mygarden" class="my-garden-link">Back to My Garden</a>
+    <a href="/mygarden" class="my-garden-link" data-transition="true">Back to My Garden</a>
     <% } %>
   </div>
   <% } %>
@@ -59,17 +63,15 @@
        data-readonly='<%= locals.isReadOnly ? "true" : "false" %>'
        data-background-id='<%= locals.backgroundId || "" %>'></div>
   
-  <!-- Retrieve garden data with regular JavaScript -->
-  <script>
-    const gardenDataElement = document.getElementById('garden-data');
-    const initialGardenData = JSON.parse(gardenDataElement.getAttribute('data-garden'));
-    const isReadOnly = gardenDataElement.getAttribute('data-readonly') === 'true';
-  </script>
+  <!-- Transition Layer -->
+  <div class="cd-transition-layer"> 
+    <div class="bg-layer"></div>
+  </div>
 
   <!-- Saved Notification -->
   <div id="save-notification" class="save-notification">Saved!</div>
 
+  <!-- 加载garden相关JS -->
   <script src="/js/garden.js"></script>
-
 </body>
 </html>
