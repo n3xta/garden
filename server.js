@@ -386,7 +386,7 @@ app.post("/api/garden", (req, res) => { // No need for express.json() here if ap
 // NEW: API endpoint to fetch all gardens
 app.get("/api/gardens", (req, res) => {
   // Find all users with garden data
-  database.find({ garden: { $exists: true } }, { username: 1, garden: 1, createdAt: 1 }, (err, users) => {
+  database.find({ garden: { $exists: true } }, { username: 1, garden: 1, createdAt: 1, backgroundId: 1 }, (err, users) => {
     if (err) {
       console.error("Database error fetching gardens:", err);
       return res.status(500).json({ error: "Error loading gardens" });
@@ -400,6 +400,7 @@ app.get("/api/gardens", (req, res) => {
       createdAt: user.createdAt,
       plantsCount: user.garden.plants.length,
       tempo: user.garden.tempo,
+      backgroundId: user.backgroundId || 1, // 添加背景ID，如果不存在则默认为1
       thumbnail: `/api/gardens/${user._id}/thumbnail` // Placeholder for future thumbnail URL
     }));
     

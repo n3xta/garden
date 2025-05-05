@@ -9,8 +9,12 @@
   <link rel="stylesheet" href="/css/transition.css">
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vanilla-tilt@1.8.1/dist/vanilla-tilt.min.js"></script>
 </head>
 <body>
+  <!-- Background with tilt effect -->
+  <div class="background"></div>
+
   <!-- Back to Home button -->
   <a href="/" data-transition="true">
     <img src="/img/back.png" class="back-button" alt="Back to Home">
@@ -27,8 +31,10 @@
     <div id="loading" class="loading-indicator">Loading gardens...</div>
     <div id="error-message" class="error-message" style="display: none;"></div>
     
-    <div id="gardens-grid" class="gardens-grid">
-      <!-- Garden cards will be inserted here by JavaScript -->
+    <div class="gardens-container">
+      <div id="gardens-grid" class="gardens-grid">
+        <!-- Garden cards will be inserted here by JavaScript -->
+      </div>
     </div>
   </div>
   
