@@ -71,6 +71,8 @@ body.js-loading-ready {
   visibility: hidden;
   overflow: hidden;
   pointer-events: none; /* 防止阻止点击 */
+  transform-style: flat; /* 确保2D渲染以提高性能 */
+  will-change: opacity, visibility; /* 提示浏览器将要变化的属性 */
 }
 
 .cd-transition-layer.visible {
@@ -94,6 +96,15 @@ body.js-loading-ready {
   /* 方法1: 强力黑色滤镜 */
   filter: brightness(0) contrast(1000%);
   
+  /* 提高动画性能 */
+  backface-visibility: hidden;
+  transform-style: flat;
+  will-change: transform;
+  
+  /* 防止FOUC (Flash of Unstyled Content) */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  
   /* 方法2: 黑色蒙版方式（如果方法1效果不理想，可以取消这段注释，并注释掉方法1）
   -webkit-mask-image: url(../img/ink.png);
   -webkit-mask-size: 100% 100%;
@@ -106,13 +117,17 @@ body.js-loading-ready {
 }
 
 .cd-transition-layer.opening .bg-layer {
-  animation: cd-sequence 0.8s steps(24);
+  animation: cd-sequence 0.8s steps(24) forwards;
   animation-fill-mode: forwards;
+  /* 防止动画重新启动 */
+  animation-play-state: running !important;
 }
 
 .cd-transition-layer.closing .bg-layer {
-  animation: cd-sequence-reverse 0.8s steps(24);
+  animation: cd-sequence-reverse 0.8s steps(24) forwards;
   animation-fill-mode: forwards;
+  /* 防止动画重新启动 */
+  animation-play-state: running !important;
 }
 
 /* 美化过渡体验 */

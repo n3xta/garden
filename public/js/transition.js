@@ -240,6 +240,9 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     
+    // 清除任何现有动画状态
+    transitionLayer.classList.remove('closing');
+    
     // 播放过渡音效
     if (url.includes('/explore')) {
       // 播放explore音效
@@ -262,14 +265,35 @@ document.addEventListener('DOMContentLoaded', function() {
     // 设置标记，表示下一个页面需要执行"ink out"动画
     sessionStorage.setItem('pageIsEntering', 'true');
     
-    transitionLayer.classList.add('visible', 'opening');
-    console.log('Added visible and opening classes');
-    
-    // Wait for animation to complete before navigating
-    transitionBackground.addEventListener('animationend', function onEnd() {
-      console.log('Animation ended, navigating to:', url);
-      window.location.href = url;
-      transitionBackground.removeEventListener('animationend', onEnd);
+    // 使用requestAnimationFrame确保DOM更新节奏一致
+    requestAnimationFrame(function() {
+      // 先添加visible类
+      transitionLayer.classList.add('visible');
+      
+      // 使用另一个requestAnimationFrame确保前一个类已应用
+      requestAnimationFrame(function() {
+        // 再添加opening类启动动画
+        transitionLayer.classList.add('opening');
+        console.log('Added visible and opening classes');
+        
+        // 创建一次性事件监听器
+        function onAnimationEnd(event) {
+          // 确保是bg-layer的动画结束
+          if (event.target !== transitionBackground) return;
+          
+          console.log('Animation ended, navigating to:', url);
+          
+          // 清理监听器
+          transitionBackground.removeEventListener('animationend', onAnimationEnd);
+          
+          // 跳转到目标URL
+          window.location.href = url;
+        }
+        
+        // 确保只添加一次监听器
+        transitionBackground.removeEventListener('animationend', onAnimationEnd);
+        transitionBackground.addEventListener('animationend', onAnimationEnd, {once: true});
+      });
     });
   }
   
@@ -284,6 +308,13 @@ document.addEventListener('DOMContentLoaded', function() {
       body.classList.add('ink-transition-complete');
       removePreloader();
       return;
+    }
+    
+    // 清除任何已有的类和监听器，确保干净的状态
+    transitionLayer.classList.remove('closing');
+    var oldEndListener = transitionBackground.onanimationend;
+    if (oldEndListener) {
+      transitionBackground.removeEventListener('animationend', oldEndListener);
     }
     
     // 初始状态：墨水层应该完全覆盖屏幕
@@ -310,6 +341,9 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
     
+    // 使用标志防止多次触发动画
+    var animationStarted = false;
+    
     // 等待重要内容加载完成
     pageReady.then(function() {
       console.log('页面内容准备就绪，开始准备动画');
@@ -319,22 +353,48 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // 短暂延迟以允许内容渲染
       setTimeout(function() {
+        // 检查是否已经开始动画，防止重复触发
+        if (animationStarted) {
+          console.log('动画已经开始，跳过重复触发');
+          return;
+        }
+        
+        animationStarted = true;
         console.log('开始执行ink out动画');
         
-        // 重要修改：同时移除预加载遮罩和启动ink out动画
         // 淡出预加载遮罩
         removePreloader();
         
-        // 添加closing类开始反向动画
-        transitionLayer.classList.add('closing');
-        
-        // 动画结束后移除所有类
-        transitionBackground.addEventListener('animationend', function onClose() {
-          console.log('Ink out动画完成');
-          transitionLayer.classList.remove('visible', 'closing');
-          // 重置transform
-          transitionBackground.style.transform = '';
-          transitionBackground.removeEventListener('animationend', onClose);
+        // 确保类的稳定状态，避免频闪
+        requestAnimationFrame(function() {
+          // 添加closing类开始反向动画
+          transitionLayer.classList.add('closing');
+          
+          // 创建一个新的一次性事件监听器
+          function onAnimationEnd(event) {
+            // 确保是bg-layer的动画结束，而不是其他元素
+            if (event.target !== transitionBackground) return;
+            
+            console.log('Ink out动画完成');
+            
+            // 移除监听器，防止多次触发
+            transitionBackground.removeEventListener('animationend', onAnimationEnd);
+            
+            // 在下一帧再移除类，确保动画完全完成
+            requestAnimationFrame(function() {
+              transitionLayer.classList.remove('visible');
+              transitionLayer.classList.remove('closing');
+              
+              // 重置transform需要延迟一帧，避免可见的跳跃
+              requestAnimationFrame(function() {
+                transitionBackground.style.transform = '';
+              });
+            });
+          }
+          
+          // 确保只添加一次监听器
+          transitionBackground.removeEventListener('animationend', onAnimationEnd);
+          transitionBackground.addEventListener('animationend', onAnimationEnd, {once: true});
         });
       }, isGardenPage ? 1000 : 200); // Garden页面给更长时间
     });
