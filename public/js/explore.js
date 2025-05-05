@@ -150,143 +150,88 @@ function animateScroll() {
   gardensGrid.style.transform = `translateX(-${scrollPosition}px)`;
 }
 
-// Update dimensions after window resize or content change
-function updateDimensions() {
-  if (gardens.length === 0) return;
-  
-  // First, remove any existing clones
-  const existingClones = gardensGrid.querySelectorAll('.garden-card.clone');
-  existingClones.forEach(clone => clone.remove());
-  
-  // Get all original cards
-  const originalCards = gardensGrid.querySelectorAll('.garden-card');
-  
-  if (originalCards.length > 0) {
-    cardWidth = originalCards[0].offsetWidth + gapWidth;
-    originalContentWidth = cardWidth * originalCards.length;
-    
-    // Calculate how many clones we need for smooth looping
-    // We want at least one full screen width of clones on both sides
-    cloneCount = Math.ceil(window.innerWidth / cardWidth) + 4; // 多复制几个，确保滚动顺畅
-    
-    // Add clones BEFORE the first card
-    for (let i = originalCards.length - cloneCount; i < originalCards.length; i++) {
-      const index = i >= 0 ? i : originalCards.length + i;
-      const card = originalCards[index];
-      const clone = card.cloneNode(true);
-      clone.classList.add('clone');
-      gardensGrid.insertBefore(clone, gardensGrid.firstChild);
-    }
-    
-    // Add clones AFTER the last card
-    for (let i = 0; i < cloneCount; i++) {
-      const index = i % originalCards.length;
-      const card = originalCards[index];
-      const clone = card.cloneNode(true);
-      clone.classList.add('clone');
-      gardensGrid.appendChild(clone);
-    }
-    
-    // Calculate new dimensions
-    const allCards = gardensGrid.querySelectorAll('.garden-card');
-    totalWidth = cardWidth * allCards.length;
-    
-    // Calculate width of clones before original items
-    const beforeClones = gardensGrid.querySelectorAll('.garden-card.clone:nth-child(-n+' + cloneCount + ')');
-    cloneBeforeWidth = beforeClones.length * cardWidth;
-    
-    // Initial positioning to show the original first items
-    scrollPosition = cloneBeforeWidth;
-    targetScrollPosition = cloneBeforeWidth;
-    gardensGrid.style.transition = 'none';
-    gardensGrid.style.transform = `translateX(-${scrollPosition}px)`;
-    
-    // Force reflow
-    void gardensGrid.offsetWidth;
-    
-    // 初始化tilt效果（延迟执行以确保DOM已完全加载）
-    setTimeout(initTiltEffects, 100);
-  }
-}
-
-// 初始化所有卡片的tilt效果
-function initTiltEffects() {
-  if (typeof VanillaTilt === 'undefined') {
-    console.error('VanillaTilt is still not loaded when initializing tilt effects');
-    return;
-  }
-  
-  console.log('Initializing tilt effects for cards');
-  const cards = document.querySelectorAll('.garden-card');
-  
-  cards.forEach((card, index) => {
-    // 移除现有的VanillaTilt实例（如果有的话）
-    if (card.vanillaTilt) {
-      card.vanillaTilt.destroy();
-    }
-    
-    // 根据索引奇偶性设置tilt方向
-    const isOdd = index % 2 === 0;
-    const startX = isOdd ? -20 : 20;
-    
-    card.setAttribute('data-tilt', '');
-    card.setAttribute('data-tilt-startX', startX);
-    card.setAttribute('data-tilt-reset-to-start', 'true');
-    
-    // 应用tilt效果
-    VanillaTilt.init(card, {
-      max: 15,
-      speed: 400,
-      glare: true,
-      'max-glare': 0.3,
-      gyroscope: false,
-      scale: 1.02,
-      perspective: 1000,
-      reset: true,
-      transition: true,
-      startX: startX
-    });
-    
-    console.log(`Applied tilt to card ${index}, startX: ${startX}`);
-  });
-  
-  console.log(`Total tilt effects applied: ${cards.length}`);
-}
-
 // 搜索功能
 function handleSearch() {
+  console.log("==== SEARCH STARTED ====");
   const searchTerm = searchInput.value.trim().toLowerCase();
-  const gardenCards = gardensGrid.querySelectorAll('.garden-card:not(.clone)');
+  console.log("Search term:", JSON.stringify(searchTerm));
   
-  if (searchTerm === '') {
-    // Show all if search is empty
-    gardenCards.forEach(card => {
-      card.style.display = 'flex';
-    });
-    
-    // Restore clones
-    updateDimensions();
-    return;
-  }
+  // 清除之前的错误消息
+  errorMessage.style.display = 'none';
   
-  // First, remove any existing clones
+  // 移除所有克隆卡片
   const existingClones = gardensGrid.querySelectorAll('.garden-card.clone');
+  console.log(`Removing ${existingClones.length} existing clones`);
   existingClones.forEach(clone => clone.remove());
   
-  // Filter garden cards based on search term
-  gardenCards.forEach(card => {
-    const gardenName = card.querySelector('.garden-name').textContent.toLowerCase();
-    const ownerName = card.querySelector('.garden-owner').textContent.toLowerCase();
-    
-    if (gardenName.includes(searchTerm) || ownerName.includes(searchTerm)) {
-      card.style.display = 'flex';
-    } else {
-      card.style.display = 'none';
-    }
-  });
+  // 获取所有原始卡片
+  const gardenCards = gardensGrid.querySelectorAll('.garden-card:not(.clone)');
+  console.log(`Found ${gardenCards.length} original cards to search through`);
   
-  // Update dimensions after filtering
-  updateDimensions();
+  let visibleCardCount = 0;
+  
+  if (searchTerm === '') {
+    console.log("Empty search term - showing all cards");
+    // 显示所有卡片
+    gardenCards.forEach(card => {
+      card.style.display = 'flex';
+      card.style.visibility = 'visible';
+      card.style.opacity = '1';
+      visibleCardCount++;
+    });
+  } else {
+    // 过滤卡片
+    gardenCards.forEach((card, index) => {
+      const gardenName = card.querySelector('.garden-name').textContent.toLowerCase();
+      const ownerName = card.querySelector('.garden-owner').textContent.toLowerCase();
+      
+      console.log(`Card ${index}: Garden="${gardenName}", Owner="${ownerName}"`);
+      
+      if (gardenName.includes(searchTerm) || ownerName.includes(searchTerm)) {
+        console.log(`Card ${index} matches search term`);
+        card.style.display = 'flex';
+        card.style.visibility = 'visible';
+        card.style.opacity = '1';
+        visibleCardCount++;
+      } else {
+        console.log(`Card ${index} does not match search term`);
+        card.style.display = 'none';
+        card.style.visibility = 'hidden';
+        card.style.opacity = '0';
+      }
+    });
+  }
+  
+  console.log(`Search results: ${visibleCardCount} matches found for "${searchTerm}"`);
+  
+  if (visibleCardCount > 0) {
+    console.log("Updating dimensions with visible cards");
+    
+    // 重置当前滚动位置
+    scrollPosition = 0;
+    targetScrollPosition = 0;
+    gardensGrid.style.transform = 'translateX(0)';
+    
+    // 确保卡片在视口中可见
+    const visibleCards = Array.from(gardenCards).filter(card => card.style.display !== 'none');
+    console.log(`Visible cards after filtering: ${visibleCards.length}`);
+    
+    // 强制重排
+    void gardensGrid.offsetWidth;
+    
+    // 更新布局
+    updateDimensions();
+  } else if (searchTerm !== '') {
+    // 没有找到匹配的卡片
+    console.log("No cards match the search term");
+    errorMessage.textContent = `No gardens found matching "${searchTerm}"`;
+    errorMessage.style.display = 'block';
+    
+    // 清除滚动位置
+    scrollPosition = 0;
+    targetScrollPosition = 0;
+    gardensGrid.style.transform = 'translateX(0)';
+  }
 }
 
 // API 调用获取花园数据
@@ -387,4 +332,143 @@ function viewGarden(gardenId) {
     window.location.href = `/view/${gardenId}`;
     bgLayer.removeEventListener('animationend', onEnd);
   });
+}
+
+// Update dimensions after window resize or content change
+function updateDimensions() {
+  if (gardens.length === 0) {
+    console.log("No garden data available");
+    return;
+  }
+  
+  // 获取所有可见的原始卡片
+  const visibleOriginalCards = Array.from(gardensGrid.querySelectorAll('.garden-card:not(.clone)'))
+    .filter(card => card.style.display !== 'none');
+  
+  console.log(`Updating dimensions with ${visibleOriginalCards.length} visible original cards`);
+  
+  if (visibleOriginalCards.length === 0) {
+    console.log("No visible cards found");
+    totalWidth = 0;
+    cloneBeforeWidth = 0;
+    gardensGrid.style.transform = 'translateX(0)';
+    return;
+  }
+  
+  // 先移除现有的克隆卡片
+  const existingClones = gardensGrid.querySelectorAll('.garden-card.clone');
+  existingClones.forEach(clone => clone.remove());
+  
+  // 计算卡片宽度
+  cardWidth = visibleOriginalCards[0].offsetWidth + gapWidth;
+  originalContentWidth = cardWidth * visibleOriginalCards.length;
+  
+  console.log(`Card width: ${cardWidth}px, Total original content width: ${originalContentWidth}px`);
+  
+  // 计算需要的克隆数量
+  cloneCount = Math.ceil(window.innerWidth / cardWidth) + 4;
+  
+  console.log(`Creating ${cloneCount} clones before and after visible cards`);
+  
+  // 在第一张卡片前添加克隆卡片
+  for (let i = visibleOriginalCards.length - cloneCount; i < visibleOriginalCards.length; i++) {
+    const index = i >= 0 ? i : visibleOriginalCards.length + i;
+    if (index < 0 || index >= visibleOriginalCards.length) continue;
+    
+    const card = visibleOriginalCards[index];
+    if (!card) continue;
+    
+    const clone = card.cloneNode(true);
+    clone.classList.add('clone');
+    clone.style.display = 'flex';
+    clone.style.visibility = 'visible';
+    clone.style.opacity = '1';
+    gardensGrid.insertBefore(clone, gardensGrid.firstChild);
+  }
+  
+  // 在最后一张卡片后添加克隆卡片
+  for (let i = 0; i < cloneCount; i++) {
+    const index = i % visibleOriginalCards.length;
+    if (index < 0 || index >= visibleOriginalCards.length) continue;
+    
+    const card = visibleOriginalCards[index];
+    if (!card) continue;
+    
+    const clone = card.cloneNode(true);
+    clone.classList.add('clone');
+    clone.style.display = 'flex';
+    clone.style.visibility = 'visible';
+    clone.style.opacity = '1';
+    gardensGrid.appendChild(clone);
+  }
+  
+  // 计算新的尺寸
+  const allVisibleCards = gardensGrid.querySelectorAll('.garden-card:not([style*="display: none"])');
+  totalWidth = cardWidth * allVisibleCards.length;
+  
+  // 计算前置克隆的宽度
+  const beforeClones = gardensGrid.querySelectorAll('.garden-card.clone:nth-child(-n+' + cloneCount + ')');
+  cloneBeforeWidth = beforeClones.length * cardWidth;
+  
+  console.log(`Total width with clones: ${totalWidth}px, Clone before width: ${cloneBeforeWidth}px`);
+  
+  // 设置初始定位
+  scrollPosition = cloneBeforeWidth;
+  targetScrollPosition = cloneBeforeWidth;
+  gardensGrid.style.transition = 'none';
+  gardensGrid.style.transform = `translateX(-${scrollPosition}px)`;
+  
+  // 强制重排
+  void gardensGrid.offsetWidth;
+  gardensGrid.style.transition = 'transform 0.5s ease';
+  
+  console.log("Dimensions updated, applying tilt effects");
+  
+  // 初始化tilt效果
+  setTimeout(initTiltEffects, 100);
+}
+
+// 初始化所有卡片的tilt效果
+function initTiltEffects() {
+  if (typeof VanillaTilt === 'undefined') {
+    console.error('VanillaTilt is still not loaded when initializing tilt effects');
+    return;
+  }
+  
+  console.log('Initializing tilt effects for cards');
+  const cards = document.querySelectorAll('.garden-card');
+  
+  cards.forEach((card, index) => {
+    // 移除现有的VanillaTilt实例（如果有的话）
+    if (card.vanillaTilt) {
+      card.vanillaTilt.destroy();
+    }
+    
+    // 根据索引奇偶性设置tilt方向
+    const isOdd = index % 2 === 0;
+    const startX = isOdd ? -20 : 20;
+    
+    card.setAttribute('data-tilt', '');
+    card.setAttribute('data-tilt-startX', startX);
+    card.setAttribute('data-tilt-reset-to-start', 'true');
+    
+    // 应用tilt效果
+    VanillaTilt.init(card, {
+      max: 15,
+      speed: 400,
+      glare: true,
+      'max-glare': 0.3,
+      gyroscope: false,
+      scale: 1.02,
+      perspective: 1000,
+      reset: true,
+      transition: true,
+      startX: startX,
+      axis: 'x'
+    });
+    
+    console.log(`Applied tilt to card ${index}, startX: ${startX}`);
+  });
+  
+  console.log(`Total tilt effects applied: ${cards.length}`);
 } 
