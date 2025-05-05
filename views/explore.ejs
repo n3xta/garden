@@ -19,15 +19,21 @@
   <a href="/" data-transition="true">
     <img src="/img/back.png" class="back-button" alt="Back to Home">
   </a>
+  
+  <!-- Search button -->
+  <img src="/img/search.png" class="search-button" alt="Search" id="search-button">
+  
+  <!-- Clear search button (initially hidden) -->
+  <img src="/img/clear.png" class="clear-button" alt="Clear Search" id="clear-button">
+  
+  <!-- Search overlay -->
+  <div class="search-overlay" id="search-overlay">
+    <div class="search-input-container">
+      <input type="text" id="search-input" placeholder="Search by garden name or creator..." autofocus>
+    </div>
+  </div>
 
   <div class="container">
-    <h1>Explore Gardens</h1>
-    
-    <div class="search-container">
-      <input type="text" id="search-input" placeholder="Search by garden name or creator...">
-      <button id="search-button">Search</button>
-    </div>
-    
     <div id="loading" class="loading-indicator">Loading gardens...</div>
     <div id="error-message" class="error-message" style="display: none;"></div>
     

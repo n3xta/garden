@@ -4,6 +4,8 @@ const loadingIndicator = document.getElementById('loading');
 const errorMessage = document.getElementById('error-message');
 const searchInput = document.getElementById('search-input');
 const searchButton = document.getElementById('search-button');
+const clearButton = document.getElementById('clear-button');
+const searchOverlay = document.getElementById('search-overlay');
 const background = document.querySelector('.background');
 
 // Global variables
@@ -20,6 +22,7 @@ let isScrolling = false;
 let animationFrame = null;
 let scrollTimeout = null;
 let cardIndex = 0; // 用于跟踪卡片索引（奇偶性）
+let isFiltered = false; // 跟踪是否有激活的搜索过滤
 
 // 页面初始化
 document.addEventListener('DOMContentLoaded', function() {
@@ -37,11 +40,27 @@ document.addEventListener('DOMContentLoaded', function() {
   // Get all gardens from API
   fetchGardens();
 
-  // Event listeners
-  searchButton.addEventListener('click', handleSearch);
+  // 事件监听
+  searchButton.addEventListener('click', toggleSearchOverlay);
+  clearButton.addEventListener('click', clearSearch);
   searchInput.addEventListener('keyup', (e) => {
     if (e.key === 'Enter') {
       handleSearch();
+      toggleSearchOverlay();
+    }
+  });
+  
+  // 点击搜索覆盖层背景关闭
+  searchOverlay.addEventListener('click', (e) => {
+    if (e.target === searchOverlay) {
+      toggleSearchOverlay();
+    }
+  });
+  
+  // ESC键关闭搜索覆盖层
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && searchOverlay.classList.contains('active')) {
+      toggleSearchOverlay();
     }
   });
   
@@ -52,10 +71,56 @@ document.addEventListener('DOMContentLoaded', function() {
   window.addEventListener('resize', updateDimensions);
 });
 
+// 切换搜索覆盖层显示
+function toggleSearchOverlay() {
+  searchOverlay.classList.toggle('active');
+  if (searchOverlay.classList.contains('active')) {
+    searchInput.focus();
+    searchInput.value = '';
+  }
+}
+
+// 清除搜索过滤器
+function clearSearch() {
+  console.log("==== CLEARING SEARCH ====");
+  
+  // 隐藏清除按钮
+  clearButton.classList.remove('active');
+  isFiltered = false;
+  
+  // 隐藏错误消息
+  errorMessage.style.display = 'none';
+  
+  // 移除所有克隆卡片
+  const existingClones = gardensGrid.querySelectorAll('.garden-card.clone');
+  existingClones.forEach(clone => clone.remove());
+  
+  // 获取所有原始卡片并显示
+  const gardenCards = gardensGrid.querySelectorAll('.garden-card:not(.clone)');
+  gardenCards.forEach(card => {
+    card.style.display = 'flex';
+    card.style.visibility = 'visible';
+    card.style.opacity = '1';
+  });
+  
+  // 重置滚动位置
+  scrollPosition = 0;
+  targetScrollPosition = 0;
+  gardensGrid.style.transform = 'translateX(0)';
+  
+  // 强制重排
+  void gardensGrid.offsetWidth;
+  
+  // 更新布局
+  updateDimensions();
+  
+  console.log("Search cleared, showing all gardens");
+}
+
 // 加载VanillaTilt如果没有加载
 function loadVanillaTilt() {
   const script = document.createElement('script');
-  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js';
+  script.src = 'https://cdn.jsdelivr.net/npm/vanilla-tilt@1.8.1/dist/vanilla-tilt.min.js';
   script.onload = () => {
     console.log('VanillaTilt loaded dynamically');
     initTiltEffects();
@@ -74,6 +139,9 @@ function setupTiltEffect() {
 
 // Handle mouse wheel for horizontal scrolling
 function handleWheel(e) {
+  // 如果搜索覆盖层活跃，不处理滚动
+  if (searchOverlay.classList.contains('active')) return;
+  
   if (totalWidth <= window.innerWidth) return;
   
   e.preventDefault();
@@ -179,6 +247,10 @@ function handleSearch() {
       card.style.opacity = '1';
       visibleCardCount++;
     });
+    
+    // 隐藏清除按钮，因为没有过滤
+    clearButton.classList.remove('active');
+    isFiltered = false;
   } else {
     // 过滤卡片
     gardenCards.forEach((card, index) => {
@@ -200,6 +272,10 @@ function handleSearch() {
         card.style.opacity = '0';
       }
     });
+    
+    // 显示清除按钮，因为有过滤
+    clearButton.classList.add('active');
+    isFiltered = true;
   }
   
   console.log(`Search results: ${visibleCardCount} matches found for "${searchTerm}"`);
