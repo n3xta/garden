@@ -20,7 +20,7 @@
     </div>
   <% } else { %>
     <div class="letter-container">
-      <img src="/2dassets/letter.png" class="letter parallax-item" alt="Letter" data-tilt data-tilt-max="10" data-tilt-speed="1" data-tilt-perspective="1000" data-tilt-scale="1.03">
+      <img src="/img/letter.png" class="letter parallax-item" alt="Letter" data-tilt data-tilt-max="10" data-tilt-speed="1" data-tilt-perspective="1000" data-tilt-scale="1.03">
     </div>
   <% } %>
   
@@ -29,15 +29,15 @@
     <% if (!user) { %>
       <!-- Login/Signup bookmarks (shown when logged out) -->
       <a href="/login" class="bookmark-link login-link">
-        <img src="/2dassets/login.png" class="bookmark login" alt="Login">
+        <img src="/img/login.png" class="bookmark login" alt="Login">
       </a>
       <a href="/register" class="bookmark-link signup-link">
-        <img src="/2dassets/signup.png" class="bookmark signup" alt="Sign Up">
+        <img src="/img/signup.png" class="bookmark signup" alt="Sign Up">
       </a>
     <% } else { %>
       <!-- Logout bookmark (shown when logged in) -->
       <a href="/logout" class="bookmark-link logout-link">
-        <img src="/2dassets/logout.png" class="bookmark logout" alt="Logout">
+        <img src="/img/logout.png" class="bookmark logout" alt="Logout">
       </a>
     <% } %>
   </div>
@@ -45,12 +45,12 @@
   <!-- Bookmarks in bottom right corner -->
   <% if (user) { %>
     <a href="/mygarden" data-transition="true">
-      <img src="/2dassets/your_garden.png" class="bookmark garden" alt="Your Garden">
+      <img src="/img/your_garden.png" class="bookmark garden" alt="Your Garden">
     </a>
   <% } %>
 
   <a href="/explore" data-transition="true">
-    <img src="/2dassets/explore.png" class="bookmark explore" alt="Explore">
+    <img src="/img/explore.png" class="bookmark explore" alt="Explore">
   </a>
   
   <!-- Transition Layer -->

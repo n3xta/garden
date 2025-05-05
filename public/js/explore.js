@@ -95,7 +95,7 @@ function createGardenCard(garden) {
   const cardHTML = `
     <div class="garden-preview">
       <div class="garden-preview-placeholder">
-        <img src="/2dassets/garden-placeholder.svg" alt="Garden">
+        <img src="/img/garden-placeholder.svg" alt="Garden">
       </div>
     </div>
     <div class="garden-info">

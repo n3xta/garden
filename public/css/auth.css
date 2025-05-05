@@ -177,7 +177,7 @@ body.auth-page {
 /* 添加从EJS文件中整合的内联样式 */
 /* Override background for auth pages to use wood.jpg */
 .auth-page .background {
-  background-image: url('/2dassets/wood.jpg') !important;
+  background-image: url('/img/wood.jpg') !important;
   opacity: 1 !important;
 }
 

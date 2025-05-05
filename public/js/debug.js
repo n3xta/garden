@@ -14,7 +14,7 @@ scene.add(light);
 
 const loader = new THREE.GLTFLoader();
 
-loader.load('/3dassets/lowpoly_indoor_plant_pack.glb', (gltf) => {
+loader.load('/3d/lowpoly_indoor_plant_pack.glb', (gltf) => {
     const sketchfabModel = gltf.scene.children[0];
     const mainScene = sketchfabModel.children[0];
     const rootNode = mainScene.children[0];

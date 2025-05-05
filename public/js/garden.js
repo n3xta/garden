@@ -40,7 +40,7 @@ function getGardenBackgroundId() {
 
 function setGardenBackground() {
   const backgroundId = getGardenBackgroundId();
-  document.documentElement.style.setProperty('--garden-background', `url('/2dassets/garden_bg/${backgroundId}.jpg')`);
+  document.documentElement.style.setProperty('--garden-background', `url('/img/garden_bg/${backgroundId}.jpg')`);
 }
 
 const nSteps = 16;
@@ -180,7 +180,7 @@ function loadPlantModels(callback) {
       }
   }
 
-  loader.load('/3dassets/pack1.glb', (gltf) => {
+  loader.load('/3d/pack1.glb', (gltf) => {
     const pack1Plants = gltf.scene.children[0].children[0].children[0].children;
     
     for (let plant of pack1Plants) {
@@ -200,7 +200,7 @@ function loadPlantModels(callback) {
     checkCompletion();
   });
 
-  loader.load('/3dassets/pack2.glb', (gltf) => {
+  loader.load('/3d/pack2.glb', (gltf) => {
     const pack2Plants = gltf.scene.children[0].children[0].children[0].children;
     
     for (let plant of pack2Plants) {
@@ -279,7 +279,7 @@ function initThree() {
   const panelSize = 12.5;
   const panelScale = 40;
 
-  loader.load('/3dassets/wooden_floor_panels_mid.glb', (gltf) => {
+  loader.load('/3d/wooden_floor_panels_mid.glb', (gltf) => {
     const panelModel = gltf.scene;
     panelModel.scale.set(panelScale, panelScale, panelScale);
 

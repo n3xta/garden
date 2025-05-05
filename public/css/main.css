@@ -15,7 +15,7 @@ html, body {
   width: calc(100% + 200px); /* 增加宽度 */
   height: calc(100% + 200px); /* 增加高度 */
   z-index: -1;
-  background: url('/2dassets/main_bg.png') no-repeat center center;
+  background: url('/img/main_bg.png') no-repeat center center;
   background-size: cover;
   opacity: 1;
   will-change: transform;
@@ -27,7 +27,7 @@ html, body {
   left: -100px;
   width: calc(100% + 200px);
   height: calc(100% + 200px);
-  background-image: url('/2dassets/wood.jpg') !important;
+  background-image: url('/img/wood.jpg') !important;
   background-size: cover;
   opacity: 1 !important;
 }
@@ -40,7 +40,7 @@ html, body {
   width: calc(100% + 200px);
   height: calc(100% + 200px);
   z-index: 999;
-  background: url('/2dassets/wood.jpg') no-repeat center center;
+  background: url('/img/wood.jpg') no-repeat center center;
   background-size: cover;
   transition: bottom 1s cubic-bezier(0.19, 1, 0.22, 1); /* Exponential decrease curve */
 }
@@ -202,7 +202,7 @@ body {
   width: 100%;
   height: 100%;
   z-index: 999;
-  background: url('/2dassets/wood.jpg') no-repeat center center;
+  background: url('/img/wood.jpg') no-repeat center center;
   background-size: cover;
   transition: bottom 1s cubic-bezier(0.19, 1, 0.22, 1); /* Exponential decrease curve */
 }
@@ -324,7 +324,7 @@ html {
   width: calc(100% + 400px) !important; /* 显著加大背景尺寸 */
   height: calc(100% + 400px) !important;
   z-index: -1;
-  background: url('/2dassets/main_bg.png') no-repeat center center;
+  background: url('/img/main_bg.png') no-repeat center center;
   background-size: cover;
   opacity: 1;
   will-change: transform;

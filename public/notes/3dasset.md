@@ -1,4 +1,4 @@
-[pack1](../3dassets/lowpoly_indoor_potted_plant.glb)
+[pack1](../3d/lowpoly_indoor_potted_plant.glb)
 
 Plant 0: plant1
 Plant 1: plant2
@@ -9,7 +9,7 @@ Plant 5: plant6
 Plant 6: plant7
 Plant 7: plant8
 
-[pack2](../3dassets/lowpoly_indoor_potted_plant.glb)
+[pack2](../3d/lowpoly_indoor_potted_plant.glb)
 
 Plant 0: pot0
 Plant 1: pot1
