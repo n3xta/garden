@@ -2,6 +2,10 @@
    Transition Layer Styles - 包括关键CSS和预加载遮罩
 -------------------------------- */
 /* 页面初始状态控制 - 防止闪烁 */
+body {
+  background-color: #000;
+}
+
 html.loading, body.loading {
   visibility: hidden; /* 初始隐藏所有内容 */
 }

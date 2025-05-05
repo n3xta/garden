@@ -310,7 +310,7 @@ The system is implemented with the following files:
 The page transition follows this general flow:
 
 1. **Initial Page Load**:
-   - A preloader overlay is immediately shown (highest z-index)
+   - A preloader overlay is immediately shown (highest z-index) with "loading..." text
    - The transition layer is prepared for an "ink out" animation if coming from another page
    - Page content is initially hidden with CSS
 
@@ -333,17 +333,33 @@ The page transition follows this general flow:
 - **Session Persistence**: Uses `sessionStorage.setItem('pageIsEntering', 'true')` to communicate transition state between pages
 - **Animation Implementation**: CSS animations with steps() function to create sprite sheet frame-by-frame animation
 - **Garden Page Special Handling**: Garden pages use additional delays to accommodate 3D content loading
+- **Index Page Treatment**: First-time visitors to the index page will see the ink effect and preloader
+- **Authentication Pages**: Login and register pages use a standard navigation without ink effects
 - **Responsive Design**: Calculates appropriate dimensions for the transition layer based on window size and sprite aspect ratio
 - **Audio Integration**: Plays specific sound effects during transitions (`/samples/ui/explore.wav`, `/samples/ui/garden.wav`)
 
-### 14.4 Transition CSS Techniques
+### 14.4 Resource Preloading
 
-- Black filtering of the ink sprite using `filter: brightness(0) contrast(1000%)`
-- CSS animations for sequenced sprite sheet playback
-- CSS class-based state management (visible, opening, closing)
-- Strategic opacity transitions to prevent content flashing
+The system implements resource preloading to ensure smooth transitions between pages:
 
-### 14.5 Usage
+- **Authentication Resources**: When on the index page, resources for login/register pages are preloaded
+- **Image Preloading**: Key images are preloaded using JavaScript Image objects
+- **Audio Preloading**: Sound effects are preloaded via the AudioEffects module
+- **Script Preloading**: Essential JavaScript files are preloaded with appropriate attributes
+- **CSS Preloading**: Style sheets are preloaded to ensure quick rendering
+
+### 14.5 Performance Optimizations
+
+To ensure smooth animations without flickering:
+
+- **Animation Sequencing**: Uses requestAnimationFrame for synchronized, frame-perfect CSS class changes
+- **Hardware Acceleration**: Leverages CSS properties like will-change, transform-style, and backface-visibility
+- **Event Management**: Implements one-time event listeners and proper cleanup to prevent multiple triggers
+- **State Guards**: Uses animation flags to prevent concurrent animation attempts
+- **Render Optimization**: Employs image-rendering properties for crisp sprite rendering
+- **DOM Updates**: Carefully sequences DOM operations to avoid intermediate render states
+
+### 14.6 Usage
 
 To enable transitions on a link:
 ```html
@@ -351,3 +367,8 @@ To enable transitions on a link:
 ```
 
 The transition system automatically handles the rest, providing a consistent visual effect when navigating between pages.
+
+To exclude a link from using the ink transition (e.g., for authentication pages):
+```html
+<a href="/login">Login</a>  <!-- No data-transition attribute -->
+```
