@@ -115,30 +115,34 @@ input[type="range"]::-moz-range-thumb {
 /* Back button and Explore button styles */
 .back-button {
   position: fixed;
-  top: 20px;
-  left: 20px;
-  width: 25vh;
+  top: 15vh;
+  right: -10vh;
+  width: 35vh;
   z-index: 10;
   cursor: pointer;
-  transition: transform 0.3s ease;
+  transition: all 0.3s ease;
+  transform: rotate(-5deg);
 }
 
 .back-button:hover {
-  transform: scale(1.05);
+  right: 0;
+  transform: rotate(-10deg);
 }
 
 .explore-button {
   position: fixed;
-  top: 20px;
-  right: -20vh;
-  width: 40vh;
+  top: 5vh;
+  right: -10vh;
+  width: 35vh;
   z-index: 10;
   cursor: pointer;
   transition: all 0.3s ease;
+  transform: rotate(5deg);
 }
 
 .explore-button:hover {
   right: 0;
+  transform: rotate(10deg);
 }
 
 /* Save button */
