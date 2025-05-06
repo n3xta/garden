@@ -793,10 +793,10 @@ async function togglePlay() {
   }
   if (Tone.Transport.state === 'started') {
     Tone.Transport.pause();
-    playButton.innerText = 'PLAY';
+    playButton.style.backgroundImage = "url('/img/play.webp')";
   } else {
     Tone.Transport.start();
-    playButton.innerText = 'PAUSE';
+    playButton.style.backgroundImage = "url('/img/pause.webp')";
   }
 }
 

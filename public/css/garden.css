@@ -50,56 +50,31 @@ body::before {
 .controls {
   position: fixed;
   bottom: 30px;
+  left: 0;
+  width: 100%;
+  z-index: 5;
+}
+
+/* Style for the tempo slider - dark red minimalist style */
+input[type="range"] {
+  position: fixed;
+  bottom: 30px;
   left: 50%;
   transform: translateX(-50%);
-  display: flex;
-  gap: 20px;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(8px);
-  padding: 12px 20px;
-  z-index: 5;
-  /* border: 1px solid rgba(255, 255, 255, 0.2); */
-  font-family: 'PPPangaia', serif;
-  /* text-transform: uppercase; */
-  letter-spacing: 0.08em;
-}
-
-button {
-  background: transparent;
-  border: 1px dashed rgba(255, 255, 255, 0.5);
-  color: rgba(255, 255, 255, 0.85);
-  padding: 10px 18px;
-  font-size: 32px;
-  cursor: pointer;
-  transition: background 0.3s, color 0.3s;
-  text-transform: uppercase;
-  font-family: 'PPPangaia', serif;
-}
-
-button:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
-}
-
-button:active {
-  background: rgba(255, 255, 255, 0.25);
-}
-
-input[type="range"] {
   -webkit-appearance: none;
-  width: 150px;
-  height: 14px;
-  background: rgba(255, 255, 255, 0.3);
+  width: 300px;
+  height: 4px;
+  background: rgba(160, 30, 30, 0.7);
   border: none;
   outline: none;
+  z-index: 5;
 }
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 12px;
   height: 12px;
-  background: #fff;
+  background: #a02020;
   border-radius: 0;
   cursor: pointer;
 }
@@ -107,9 +82,103 @@ input[type="range"]::-webkit-slider-thumb {
 input[type="range"]::-moz-range-thumb {
   width: 12px;
   height: 12px;
-  background: #fff;
+  background: #a02020;
   border: none;
   cursor: pointer;
+}
+
+/* Base button reset */
+button {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: 'PPPangaia', serif;
+}
+
+button:hover {
+  background-color: transparent;
+}
+
+button:active {
+  background-color: transparent;
+}
+
+/* Play button - image-based */
+#play-button {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  background: url('/img/play.webp') no-repeat center center;
+  background-size: contain;
+  font-size: 0; /* Hide text */
+  transition: transform 0.2s ease;
+  z-index: 5;
+}
+
+#play-button:hover {
+  transform: scale(1.05);
+}
+
+/* Random note button - image-based */
+#random-note {
+  position: fixed;
+  bottom: 100px; /* Positioned above the play button */
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  background: url('/img/plant.webp') no-repeat center center;
+  background-size: contain;
+  font-size: 0; /* Hide text */
+  transition: transform 0.2s ease;
+  z-index: 5;
+}
+
+#random-note:hover {
+  transform: scale(1.05);
+}
+
+/* Name button repositioned */
+.name-button {
+  position: fixed;
+  bottom: 170px; /* Position above the random note button */
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  z-index: 10;
+}
+
+.name-button:hover {
+  transform: scale(1.05);
+}
+
+/* Garden name display - moved to bottom left */
+.garden-name-display {
+  position: fixed;
+  bottom: 30px;
+  left: 30px;
+  background-color: rgba(0, 0, 0, 0.4);
+  color: white;
+  padding: 5px 12px;
+  border-radius: 8px;
+  max-width: 200px;
+  text-align: center;
+  z-index: 5;
+}
+
+.garden-name-display h3 {
+  margin: 0;
+  font-family: 'PPPangaia', sans-serif;
+  font-weight: 300;
+  font-size: 1.1em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Back button and Explore button styles */
@@ -148,12 +217,13 @@ input[type="range"]::-moz-range-thumb {
 /* Save button */
 .save-button {
   position: fixed;
-  bottom: 20px; /* Align with controls or adjust as needed */
-  right: 20px;
-  width: 15vh; /* Adjust size as needed */
+  bottom: 240px; /* Position above the name button */
+  right: 30px;
+  width: 60px;
+  height: 60px;
   z-index: 10;
   cursor: pointer;
-  transition: transform 0.3s ease;
+  transition: transform 0.2s ease;
 }
 
 .save-button:hover {
@@ -304,48 +374,6 @@ input[type="range"]::-moz-range-thumb {
   }
 }
 
-/* Garden Name UI Styles */
-
-/* Name Button */
-.name-button {
-  position: fixed;
-  top: 20px;
-  right: 90px; /* Position to the left of save button */
-  width: 50px;
-  height: 50px;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-  z-index: 10;
-}
-
-.name-button:hover {
-  transform: scale(1.1);
-}
-
-/* Garden Name Display */
-.garden-name-display {
-  position: fixed;
-  top: 80px;
-  right: 20px;
-  background-color: rgba(0, 0, 0, 0.4);
-  color: white;
-  padding: 5px 12px;
-  border-radius: 8px;
-  max-width: 200px;
-  text-align: center;
-  z-index: 5;
-}
-
-.garden-name-display h3 {
-  margin: 0;
-  font-family: 'PPPangaia', sans-serif;
-  font-weight: 300;
-  font-size: 1.1em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 /* Modal styles - Updated to match search overlay */
 .modal {
   display: none;
@@ -402,7 +430,6 @@ input[type="range"]::-moz-range-thumb {
   outline: none;
   border-color: white;
 }
-
 
 .modal-buttons {
   display: flex;

@@ -72,10 +72,10 @@
   <div id="three-container"></div>
 
   <div class="controls">
-    <button id="play-button">PLAY</button>
+    <button id="play-button" aria-label="Play/Pause"></button>
     <input type="range" id="tempo-slider" min="40" max="240" value="80">
     <% if (!locals.isReadOnly) { %>
-    <button id="random-note">PLANT A RANDOM NOTE</button>
+    <button id="random-note" aria-label="Plant a random note"></button>
     <% } %>
   </div>
 
