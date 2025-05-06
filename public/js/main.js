@@ -149,21 +149,31 @@ function handleAuthTransition(event, formType) {
   // 获取过渡层
   const overlay = document.querySelector('.transition-overlay');
   
-  // 播放木质声音
-  if (typeof AudioEffects !== 'undefined') {
-    AudioEffects.play('/samples/ui/wood.wav');
-  } else {
-    const woodSound = new Audio('/samples/ui/wood.wav');
-    woodSound.play();
+  // 确保wood.jpg图片已加载 - 预加载图片并在加载完成后开始过渡
+  const woodImage = new Image();
+  woodImage.onload = () => {
+    // 播放木质声音
+    if (typeof AudioEffects !== 'undefined') {
+      AudioEffects.play('/samples/ui/wood.wav');
+    } else {
+      const woodSound = new Audio('/samples/ui/wood.wav');
+      woodSound.play();
+    }
+    
+    // 开始动画
+    overlay.classList.add('active');
+    
+    // 木材背景开始显示后导航，延长延迟与CSS过渡时间匹配
+    setTimeout(() => {
+      window.location.href = formType === 'login' ? '/login' : '/register';
+    }, 1200); // 从800ms改为1200ms，让页面跳转发生在木质过渡动画中段
+  };
+  
+  // 如果图片已经缓存（立即加载完成），onload可能不会触发，所以添加backup
+  woodImage.src = '/img/wood.jpg';
+  if (woodImage.complete) {
+    woodImage.onload();
   }
-  
-  // 开始动画
-  overlay.classList.add('active');
-  
-  // 木材背景开始显示后导航，延长延迟与CSS过渡时间匹配
-  setTimeout(() => {
-    window.location.href = formType === 'login' ? '/login' : '/register';
-  }, 800); // 从300ms改为800ms，让页面跳转发生在木质过渡动画中途
 }
 
 // ===== 认证页面之间的切换动画 =====
@@ -185,14 +195,14 @@ function handleAuthPageTransition(event, formType) {
   // 添加上滑动画
   currentFormContainer.classList.add('exit-up');
   
-  // 立即开始整体透明度渐变，但更慢一些
+  // 整体透明度渐变，更慢一些
   if (formWrapper) {
-    formWrapper.style.transition = 'opacity 0.6s ease-out';
+    formWrapper.style.transition = 'opacity 0.9s ease-out';
     formWrapper.style.opacity = '0';
   }
   
-  // 延迟导航到新页面，让动画有时间完成
+  // 延迟导航到新页面，让动画有更多时间完成
   setTimeout(() => {
     window.location.href = formType === 'login' ? '/login' : '/register';
-  }, 600); // 添加600ms延迟，让上滑动画有时间执行
+  }, 900); // 增加到900ms延迟，让上滑动画有更多时间执行
 } 

@@ -162,7 +162,8 @@ document.addEventListener('DOMContentLoaded', function() {
       '/img/save.webp',
       '/img/letter.webp',
       '/img/login.webp',
-      '/img/signup.webp'
+      '/img/signup.webp',
+      '/img/wood.jpg'
     ];
     
     imagesToPreload.forEach(function(src) {

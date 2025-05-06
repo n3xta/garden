@@ -30,15 +30,8 @@ html, body {
 
 /* 认证页面背景 */
 .auth-page .background {
-  top: -100px !important;
-  left: -100px !important;
-  width: calc(100% + 200px) !important;
-  height: calc(100% + 200px) !important;
   background-image: url('/img/wood.jpg') !important;
-  background-size: cover !important;
-  background-position: center center !important;
   opacity: 1 !important;
-  z-index: -1 !important;
 }
 
 /* 木质背景过渡层 */
@@ -288,18 +281,10 @@ body {
   .auth-page .background,
   .transition-overlay {
     /* 在小屏幕上增加更多出血区域 */
-    top: -150px !important;
-    left: -150px !important;
-    width: calc(100% + 300px) !important;
-    height: calc(100% + 300px) !important;
-    background-size: cover !important;
-    background-position: center center !important;
-  }
-  
-  /* 小屏幕上激活状态的过渡层 - 只保留bottom属性 */
-  .transition-overlay.active {
-    bottom: 0 !important;
-    /* 移除其他属性，让它只控制bottom */
+    top: -150px;
+    left: -150px;
+    width: calc(100% + 300px);
+    height: calc(100% + 300px);
   }
 }
 

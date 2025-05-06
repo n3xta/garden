@@ -288,6 +288,14 @@ body.auth-page {
 .auth-page .background {
   background-image: url('/img/wood.jpg') !important;
   opacity: 1 !important;
+  /* 确保与transition-overlay尺寸一致，实现无缝过渡 */
+  top: -100px !important;
+  left: -100px !important;
+  width: calc(100% + 200px) !important;
+  height: calc(100% + 200px) !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
 }
 
 /* Custom tilt effects */
