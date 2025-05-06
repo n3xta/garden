@@ -120,8 +120,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const modal = document.getElementById('name-modal');
   const nameButton = document.getElementById('name-button');
   const closeButton = document.querySelector('.close-button');
-  const cancelButton = document.getElementById('cancel-name');
-  const saveButton = document.getElementById('save-name');
   const nameInput = document.getElementById('garden-name-input');
   const nameDisplay = document.getElementById('garden-name-display');
   const nameDisplayText = nameDisplay ? nameDisplay.querySelector('h3') : null;
@@ -143,7 +141,8 @@ document.addEventListener('DOMContentLoaded', function() {
       if (savedName) {
         nameInput.value = savedName;
       }
-      modal.style.display = 'block';
+      // Change display style to flex instead of block to center content
+      modal.style.display = 'flex';
       nameInput.focus();
       
       // Play UI sound effect
@@ -195,11 +194,11 @@ document.addEventListener('DOMContentLoaded', function() {
         gardenDataElement.setAttribute('data-garden-name', newName);
       }
       
-      // Show saved notification
-      showNameSavedNotification();
-      
-      // Close the modal
+      // Close the modal first
       closeModal();
+      
+      // Then show saved notification
+      showNameSavedNotification();
     })
     .catch(error => {
       console.error('Error saving garden name:', error);
@@ -212,7 +211,7 @@ document.addEventListener('DOMContentLoaded', function() {
       nameNotification.classList.add('show');
       setTimeout(() => {
         nameNotification.classList.remove('show');
-      }, 2500);
+      }, 1500); // Shorter duration for better UX
     }
   }
 
@@ -228,14 +227,6 @@ document.addEventListener('DOMContentLoaded', function() {
     closeButton.addEventListener('click', closeModal);
   }
 
-  if (cancelButton) {
-    cancelButton.addEventListener('click', closeModal);
-  }
-
-  if (saveButton) {
-    saveButton.addEventListener('click', saveGardenName);
-  }
-
   if (nameInput) {
     nameInput.addEventListener('keyup', function(e) {
       if (e.key === 'Enter') {
@@ -246,7 +237,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Close modal when clicking outside of it
+  // Close modal when clicking outside of it (on the overlay)
   window.addEventListener('click', function(e) {
     if (e.target === modal) {
       closeModal();
@@ -909,7 +900,7 @@ function showSaveNotification() {
     saveNotification.classList.add('show');
     setTimeout(() => {
         saveNotification.classList.remove('show');
-    }, 2500); // Show for 2.5 seconds
+    }, 1500); // Shorter duration for better UX
 }
 
 function onDocumentMouseClick(event) {

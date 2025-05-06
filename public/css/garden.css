@@ -160,28 +160,38 @@ input[type="range"]::-moz-range-thumb {
   transform: scale(1.05);
 }
 
-/* Save Notification */
+/* Save Notification - Updated to full screen overlay */
 .save-notification {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0.9); /* Initial state for fade-in */
-  background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white */
-  color: #2ecc71; /* Green text */
-  padding: 20px 40px;
-  border-radius: 10px;
-  font-size: 2rem;
-  font-weight: bold;
-  z-index: 1000; /* Ensure it's above everything */
-  opacity: 0; /* Start hidden */
-  pointer-events: none; /* Prevent interaction */
-  transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out; /* Fade and scale transition */
-  font-family: 'PPPangaia', sans-serif; /* Match other fonts */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  color: white;
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 3rem;
+  font-weight: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
+  font-family: 'PPPangaia', sans-serif;
 }
 
 .save-notification.show {
   opacity: 1;
-  transform: translate(-50%, -50%) scale(1); /* Final state for fade-in */
+}
+
+/* Specific color for name notification */
+#name-notification {
+  color: #8FBC8F;
+}
+
+#save-notification {
+  color: #2ecc71;
 }
 
 /* Read-only mode styles */
@@ -336,122 +346,130 @@ input[type="range"]::-moz-range-thumb {
   white-space: nowrap;
 }
 
-/* Modal styles */
+/* Modal styles - Updated to match search overlay */
 .modal {
   display: none;
   position: fixed;
-  z-index: 100;
-  left: 0;
   top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  overflow: auto;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.85);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
   backdrop-filter: blur(3px);
 }
 
 .modal-content {
-  background-color: #1a1a1a;
-  border: 2px solid #444;
-  border-radius: 10px;
-  margin: 15% auto;
-  padding: 25px;
   width: 80%;
-  max-width: 400px;
-  color: white;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-  animation: modalFadeIn 0.3s ease-out;
+  max-width: 800px;
   position: relative;
-}
-
-@keyframes modalFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .modal h2 {
   margin-top: 0;
-  margin-bottom: 20px;
-  color: #8FBC8F;
+  margin-bottom: 30px;
+  color: white;
   font-family: 'PPPangaia', sans-serif;
-  font-weight: bold;
+  font-weight: 100;
+  font-size: 2.5rem;
   text-align: center;
 }
 
 #garden-name-input {
   width: 100%;
-  padding: 12px;
-  margin-bottom: 20px;
-  background-color: #2a2a2a;
-  border: 1px solid #444;
-  border-radius: 5px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid white;
+  padding: 20px 10px;
+  font-size: 32px;
   color: white;
   font-family: 'PPPangaia', sans-serif;
-  font-size: 1em;
+  font-weight: 100;
+  margin-bottom: 20px;
   box-sizing: border-box;
 }
 
-#garden-name-input:focus {
-  border-color: #8FBC8F;
-  outline: none;
-  box-shadow: 0 0 5px rgba(143, 188, 143, 0.5);
+#garden-name-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
 }
+
+#garden-name-input:focus {
+  outline: none;
+  border-color: white;
+}
+
 
 .modal-buttons {
   display: flex;
-  justify-content: flex-end;
-  gap: 15px;
+  justify-content: center;
+  gap: 40px;
+  width: 100%;
 }
 
 .modal-buttons button {
-  padding: 8px 20px;
+  padding: 10px 30px;
   font-family: 'PPPangaia', sans-serif;
-  font-weight: 500;
-  border: none;
-  border-radius: 5px;
+  font-weight: 100;
+  font-size: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: white;
+  background: transparent;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.3s ease;
 }
 
-#save-name {
-  background-color: #8FBC8F;
-  color: white;
+.modal-buttons button:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 #save-name:hover {
-  background-color: #7aa87a;
-}
-
-#cancel-name {
-  background-color: #444;
-  color: white;
-}
-
-#cancel-name:hover {
-  background-color: #555;
+  border-color: #8FBC8F;
+  color: #8FBC8F;
 }
 
 .close-button {
   position: absolute;
-  top: 10px;
-  right: 15px;
-  color: #aaa;
-  font-size: 28px;
-  font-weight: bold;
+  top: -60px;
+  right: 0;
+  color: white;
+  font-size: 3rem;
+  font-weight: 100;
   cursor: pointer;
+  transition: color 0.3s ease;
 }
 
 .close-button:hover {
   color: white;
+  opacity: 0.8;
 }
 
-/* Name Save Notification */
-#name-notification {
-  background-color: #8FBC8F;
+/* Responsive styles for modal */
+@media (max-width: 768px) {
+  .modal h2 {
+    font-size: 2rem;
+  }
+  
+  #garden-name-input {
+    font-size: 1.5rem;
+    padding: 15px 10px;
+  }
+  
+  .modal-buttons button {
+    font-size: 1.2rem;
+    padding: 8px 20px;
+  }
+  
+  .close-button {
+    top: -40px;
+    font-size: 2rem;
+  }
+  
+  .save-notification {
+    font-size: 2rem;
+  }
 }
