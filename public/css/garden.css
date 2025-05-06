@@ -55,7 +55,6 @@ body::before {
   z-index: 5;
 }
 
-/* Style for the tempo slider - dark red minimalist style */
 input[type="range"] {
   position: fixed;
   bottom: 30px;
@@ -87,7 +86,6 @@ input[type="range"]::-moz-range-thumb {
   cursor: pointer;
 }
 
-/* Base button reset */
 button {
   background-color: transparent;
   border: none;
@@ -105,14 +103,12 @@ button:active {
   background-color: transparent;
 }
 
-/* Play button - image-based */
 #play-button {
   position: fixed;
   bottom: 40px;
   right: 300px;
   width: 15vw;
   height: 15vw;
-  min-width: 70px;
   background: url('/img/play.webp') no-repeat center center;
   background-size: contain;
   transition: transform 0.2s ease;
@@ -123,13 +119,12 @@ button:active {
   transform: scale(1.05);
 }
 
-/* Random note button - image-based */
 #random-note {
   position: fixed;
   bottom: 10px;
   right: 90px;
-  width: 14vw;
-  height: 14vw;
+  width: 10vw;
+  height: 10vw;
   background: url('/img/plant.webp') no-repeat center center;
   background-size: contain;
   transition: transform 0.2s ease;
@@ -140,12 +135,11 @@ button:active {
   transform: scale(1.05);
 }
 
-/* Name button repositioned */
 .name-button {
   position: fixed;
-  bottom: 250px; /* Position above with offset */
-  right: 15px;  /* Different right value for staggered effect */
-  max-width: 10vw;
+  bottom: 250px;
+  right: 15px;
+  max-width: 7vw;
   cursor: pointer;
   transition: transform 0.2s ease;
   z-index: 10;
@@ -155,7 +149,6 @@ button:active {
   transform: scale(1.05);
 }
 
-/* Garden name display - moved to bottom left */
 .garden-name-display {
   position: fixed;
   bottom: 30px;
@@ -179,7 +172,6 @@ button:active {
   white-space: nowrap;
 }
 
-/* Back button and Explore button styles */
 .back-button {
   position: fixed;
   top: 15vh;
@@ -212,14 +204,12 @@ button:active {
   transform: rotate(10deg);
 }
 
-/* Save button */
 .save-button {
   position: fixed;
-  bottom: 360px; /* Position above the name button with offset */
-  right: 100px;   /* Different right value for staggered effect */
-  width: 7vw;
-  height: 7vw;
-  min-width: 70px;
+  bottom: 360px;
+  right: 100px;
+  width: 5vw;
+  height: 5vw;
   z-index: 10;
   cursor: pointer;
   transition: transform 0.2s ease;
@@ -229,7 +219,6 @@ button:active {
   transform: scale(1.05);
 }
 
-/* Save Notification - Updated to full screen overlay */
 .save-notification {
   position: fixed;
   top: 0;
@@ -254,16 +243,10 @@ button:active {
   opacity: 1;
 }
 
-/* Specific color for name notification */
 #name-notification {
-  color: #8FBC8F;
+  color: #ffffff;
 }
 
-#save-notification {
-  color: #2ecc71;
-}
-
-/* Read-only mode styles */
 .readonly-banner {
   position: fixed;
   top: 20px;
@@ -309,7 +292,6 @@ button:active {
   cursor: not-allowed;
 }
 
-/* Responsive styles for read-only banner */
 @media (max-width: 768px) {
   .readonly-banner {
     top: 10px;
@@ -327,25 +309,23 @@ button:active {
   }
 }
 
-/* Ambient Sound Selector Styles - remove background and change size */
 .ambient-selector {
   position: fixed;
   top: 90px;
   left: 20px;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 10px;
   z-index: 100;
 }
 
 .ambient-icon {
-  width: 6vw;
-  height: 6vw;
+  width: 4vw;
+  height: 4vw;
   min-width: 60px;
   cursor: pointer;
   transition: transform 0.2s ease-in-out, opacity 0.2s ease-in-out;
   opacity: 0.7;
-  /* Remove the background and border by default */
   background-color: transparent;
   padding: 0;
 }
@@ -357,13 +337,11 @@ button:active {
 
 .ambient-icon.active {
   opacity: 1;
-  /* Only the active icon gets a background */
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 50%;
   padding: 5px;
 }
 
-/* Responsive adjustments for smaller screens */
 @media (max-width: 768px) {
   .ambient-selector {
     top: 80px;

@@ -23,7 +23,6 @@ function setupAuthForms() {
   if (formWrapper) {
     formWrapper.style.opacity = '1';
   }
-
 }
 
 /**

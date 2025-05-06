@@ -1,6 +1,4 @@
-/* -------------------------------- 
-   Transition Layer Styles - 包括关键CSS和预加载遮罩
--------------------------------- */
+
 /* 页面初始状态控制 - 防止闪烁 */
 body {
   background-color: #000;
@@ -90,26 +88,21 @@ body.js-loading-ready {
   left: 50%;
   top: 50%;
   transform: translateY(-50%) translateX(-2%);
-  /* dimensions will be overwritten using JavaScript */
   height: 100%;
-  /* sprite is composed of 25 frames */
   width: 2500%;
   background: url(../img/ink.webp) no-repeat 0 0;
   background-size: 100% 100%;
   
-  /* 方法1: 强力黑色滤镜 */
   filter: brightness(0) contrast(1000%);
   
-  /* 提高动画性能 */
   backface-visibility: hidden;
   transform-style: flat;
   will-change: transform;
   
-  /* 防止FOUC (Flash of Unstyled Content) */
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
   
-  /* 方法2: 黑色蒙版方式（如果方法1效果不理想，可以取消这段注释，并注释掉方法1）
+  /*
   -webkit-mask-image: url(../img/ink.webp);
   -webkit-mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat;

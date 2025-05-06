@@ -9,28 +9,22 @@
   <link rel="stylesheet" href="/css/explore.css">
   <link rel="stylesheet" href="/css/transition.css">
   
-  <!-- 添加音效模块 -->
   <script src="/js/main.js"></script>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vanilla-tilt@1.8.1/dist/vanilla-tilt.min.js"></script>
 </head>
 <body>
-  <!-- Background with tilt effect -->
   <div class="background"></div>
 
-  <!-- Back to Home button -->
   <a href="/" data-transition="true">
     <img src="/img/back.webp" class="back-button" alt="Back to Home">
   </a>
   
-  <!-- Search button -->
   <img src="/img/search.webp" class="search-button" alt="Search" id="search-button">
   
-  <!-- Clear search button (initially hidden) -->
   <img src="/img/clear.webp" class="clear-button" alt="Clear Search" id="clear-button">
-  
-  <!-- Search overlay -->
+
   <div class="search-overlay" id="search-overlay">
     <div class="search-input-container">
       <input type="text" id="search-input" placeholder="Search by garden name or creator..." autofocus>
@@ -43,12 +37,10 @@
     
     <div class="gardens-container">
       <div id="gardens-grid" class="gardens-grid">
-        <!-- Garden cards will be inserted here by JavaScript -->
       </div>
     </div>
   </div>
   
-  <!-- Transition Layer -->
   <div class="cd-transition-layer"> 
     <div class="bg-layer"></div>
   </div>

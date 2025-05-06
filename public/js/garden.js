@@ -1,15 +1,10 @@
-// Ambient Sound Manager
 const AmbientSoundManager = {
-  // The current ambient sound player
   player: null,
   
-  // The currently active sound (null means no sound)
   currentSound: null,
   
-  // Flag to track if we're waiting for user interaction to play
   pendingAutoplay: false,
   
-  // Initialize the ambient sound manager
   init: function() {
     // Wait until the document is fully loaded and interacted with (for autoplay policies)
     if (document.readyState === 'loading') {
@@ -20,15 +15,15 @@ const AmbientSoundManager = {
     
     // Add additional event for ensuring audio can play after user interaction
     document.addEventListener('click', () => {
-      // This empty function ensures we've had user interaction,
-      // which browsers require for autoplay
+
+      // wbrowsers require for autoplay
       if (this.pendingAutoplay && this.currentSound) {
         this.playCurrentSound();
         this.pendingAutoplay = false;
       }
     }, { once: true });
     
-    // Listen for Tone.js start events - if Tone.js is started, we can also start our ambient sound
+    // if Tone.js is started, also start our ambient sound
     document.addEventListener('tone.start', () => {
       if (this.pendingAutoplay && this.currentSound) {
         this.playCurrentSound();
@@ -37,33 +32,27 @@ const AmbientSoundManager = {
     });
   },
   
-  // Set up event listeners for ambient icons
   setupListeners: function() {
     const ambientIcons = document.querySelectorAll('.ambient-icon');
     
-    // Add click event listeners to all ambient icons
     ambientIcons.forEach(icon => {
       icon.addEventListener('click', () => {
         const soundNumber = icon.dataset.sound;
         this.switchSound(soundNumber);
         
-        // Update active state for all icons
         ambientIcons.forEach(i => i.classList.remove('active'));
         icon.classList.add('active');
       });
     });
     
-    // Initialize with no sound active
     document.querySelector('.ambient-icon[data-sound="none"]').classList.add('active');
   },
   
-  // Play the current sound (handles browser autoplay restrictions)
   playCurrentSound: function() {
     if (!this.player) return;
     
     const playPromise = this.player.play();
     
-    // Handle the play promise to catch autoplay restrictions
     if (playPromise !== undefined) {
       playPromise.catch(error => {
         console.warn('Autoplay prevented. Will play after user interaction:', error);
@@ -72,15 +61,12 @@ const AmbientSoundManager = {
     }
   },
   
-  // Switch to a different ambient sound
   switchSound: function(soundNumber) {
-    // Stop the current sound if playing
     if (this.player) {
       this.player.pause();
       this.player = null;
     }
     
-    // If soundNumber is null or 'none', don't play anything
     if (!soundNumber || soundNumber === 'none') {
       this.currentSound = null;
       return;
@@ -92,12 +78,10 @@ const AmbientSoundManager = {
     this.player.volume = 0.4; // Lower volume to blend better with garden sounds
     this.currentSound = soundNumber;
     
-    // Try to play, but handle autoplay restrictions
     this.playCurrentSound();
   }
 };
 
-// Initialize the ambient sound manager
 AmbientSoundManager.init();
 
 // Dispatch a custom event when Tone.js starts
@@ -116,7 +100,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Garden Name Manager
 document.addEventListener('DOMContentLoaded', function() {
-  // Elements
   const modal = document.getElementById('name-modal');
   const nameButton = document.getElementById('name-button');
   const closeButton = document.querySelector('.close-button');
@@ -126,26 +109,21 @@ document.addEventListener('DOMContentLoaded', function() {
   const nameNotification = document.getElementById('name-notification');
   const gardenDataElement = document.getElementById('garden-data');
 
-  // Get saved garden name if any
   const savedName = gardenDataElement ? gardenDataElement.getAttribute('data-garden-name') : '';
   
-  // Set initial garden name in the display and form
   if (nameDisplayText && savedName) {
     nameDisplayText.textContent = savedName;
     if (nameInput) nameInput.value = savedName;
   }
 
-  // Functions
   function openModal() {
     if (modal) {
       if (savedName) {
         nameInput.value = savedName;
       }
-      // Change display style to flex instead of block to center content
       modal.style.display = 'flex';
       nameInput.focus();
       
-      // Play UI sound effect
       if (typeof AudioEffects !== 'undefined') {
         AudioEffects.play('/samples/ui/paper.wav');
       }
@@ -160,14 +138,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function saveGardenName() {
     const newName = nameInput.value.trim();
-    if (!newName) return; // Don't save empty names
+    if (!newName) return;
     
-    // Play save sound
     if (typeof AudioEffects !== 'undefined') {
       AudioEffects.play('/samples/ui/save.wav');
     }
     
-    // Send the name to the server
     fetch('/api/garden/name', {
       method: 'POST',
       headers: {
@@ -184,20 +160,16 @@ document.addEventListener('DOMContentLoaded', function() {
     .then(data => {
       console.log('Garden name saved:', data);
       
-      // Update the displayed name
       if (nameDisplayText) {
         nameDisplayText.textContent = newName;
       }
       
-      // Update the data attribute for future use
       if (gardenDataElement) {
         gardenDataElement.setAttribute('data-garden-name', newName);
       }
       
-      // Close the modal first
       closeModal();
       
-      // Then show saved notification
       showNameSavedNotification();
     })
     .catch(error => {
@@ -211,11 +183,10 @@ document.addEventListener('DOMContentLoaded', function() {
       nameNotification.classList.add('show');
       setTimeout(() => {
         nameNotification.classList.remove('show');
-      }, 1500); // Shorter duration for better UX
+      }, 1500);
     }
   }
 
-  // Event Listeners
   if (nameButton) {
     nameButton.addEventListener('click', function(e) {
       e.preventDefault();
@@ -237,7 +208,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Close modal when clicking outside of it (on the overlay)
   window.addEventListener('click', function(e) {
     if (e.target === modal) {
       closeModal();
@@ -250,23 +220,19 @@ document.addEventListener('DOMContentLoaded', function() {
   const gardenDataElement = document.getElementById('garden-data');
   
   if (gardenDataElement) {
-    // 解析garden数据
     window.initialGardenData = JSON.parse(gardenDataElement.getAttribute('data-garden'));
     window.isReadOnly = gardenDataElement.getAttribute('data-readonly') === 'true';
     
-    // 检查transition状态
     console.log("页面加载 - transition状态检查:");
     console.log("- pageIsEntering值:", sessionStorage.getItem('pageIsEntering'));
     console.log("- Transition层可见性:", document.querySelector('.cd-transition-layer').classList.contains('visible'));
     
-    // 在数据加载完成后执行setup
     setup();
   } else {
     console.error("Garden data element not found!");
   }
 });
 
-// 页面完全加载后检查transition状态
 window.addEventListener('load', function() {
   console.log("页面完全加载后 - transition状态:");
   console.log("- Transition层可见性:", document.querySelector('.cd-transition-layer').classList.contains('visible'));
@@ -401,10 +367,7 @@ function initializeGardenFromData() {
       if (plantData.plantModelIndex !== undefined) { 
         const plant = createPlant(plantData.track, plantData.step, plantData.plantModelIndex);
         if (plant && plantData.audioParams) {
-            // Apply loaded params to the plant's specific effects
             if (plant.userData.effects) {
-                // MODIFIED: Invert filter frequency interpretation
-                // 0 means no filtering (high frequency) and high values mean more filtering (low frequency)
                 const filterFreq = plantData.audioParams.filterFreq !== undefined ? plantData.audioParams.filterFreq : 0;
                 plant.userData.effects.filter.frequency.value = filterFreq === 0 ? 20000 : (3000 - filterFreq + 300);
                 plant.userData.effects.chorus.depth.value = plantData.audioParams.chorusDepth !== undefined ? plantData.audioParams.chorusDepth : 0;
@@ -414,7 +377,6 @@ function initializeGardenFromData() {
             }
         }
         if (plant && plantData.scale) {
-            // Apply the saved scale directly
             plant.scale.copy(plantData.scale);
         }
       } else {
@@ -527,7 +489,6 @@ function initThree() {
   hemiLight.position.set( 0, 20, 0 );
   scene.add( hemiLight );
 
-  // Initialize raycaster and mouse vector
   raycaster = new THREE.Raycaster();
   mouse = new THREE.Vector2();
 
@@ -648,11 +609,8 @@ function addRandomNote() {
   createPlant(randomTrack, randomTime); 
 }
 
-// Utility function to map pitch to radius
 function pitchToRadius(pitch) {
     const midi = Tone.Frequency(pitch).toMidi();
-    // Map MIDI range (adjust as needed based on your actual MIDI values)
-    // Example: MIDI 38 (D2) to 71 (B5) maps to radius 5 to 12
     const minMidi = 38; 
     const maxMidi = 71; 
     const minRadius = 5;
@@ -695,43 +653,35 @@ function createPlant(track, step, plantModelIndex) {
     }
   });
   
-  // Calculate pitch based on track
   const notePos = (nTracks - 1) - track;
   const octave = baseOctave + Math.floor(notePos / 7);
   const noteName = noteNames[notePos % 7];
   const pitch = noteName + octave;
 
-  // Determine radius based on pitch
   const radius = pitchToRadius(pitch);
   const angle = (step / nSteps) * Math.PI * 2;
   const x = Math.cos(angle) * radius;
   const z = Math.sin(angle) * radius;
 
-  // Set default scale to 1.0 (neutral position)
   const defaultScale = 1.0;
   selectedPlant.scale.set(defaultScale, defaultScale, defaultScale);
   selectedPlant.position.set(x, 0, z);
   
-  // --- Create Sampler and Effects PER PLANT ---
-  const plantSampler = new Tone.Sampler(sampleMap).toDestination(); // Initial connection to destination
+  const plantSampler = new Tone.Sampler(sampleMap).toDestination();
   
-  // MODIFIED: Set default filter frequency to 20000 (no filtering)
-  const plantFilter = new Tone.Filter(20000, "lowpass"); // High frequency = no filtering effect
-  const plantChorus = new Tone.Chorus(4, 2.5, 0).start(); // 0 depth = no chorus effect
-  const plantDelay = new Tone.FeedbackDelay("8n", 0); // 0 feedback = no delay effect
-  const plantGain = new Tone.Gain(0.3); // Lower volume overall
+  const plantFilter = new Tone.Filter(20000, "lowpass");
+  const plantChorus = new Tone.Chorus(4, 2.5, 0).start();
+  const plantDelay = new Tone.FeedbackDelay("8n", 0);
+  const plantGain = new Tone.Gain(0.3);
 
-  // Chain: Sampler -> Filter -> Chorus -> Delay -> Gain -> Destination
-  plantSampler.disconnect(Tone.Destination); // Disconnect initial connection
+  plantSampler.disconnect(Tone.Destination);
   plantSampler.chain(plantFilter, plantChorus, plantDelay, plantGain, Tone.Destination);
-  // --- End Per-Plant Audio Setup ---
 
   selectedPlant.userData = {
     track: track,
     step: step,
     plantModelIndex: plantModelIndex,
     originalY: 0,
-    // Store the sampler and effects instances
     sampler: plantSampler,
     effects: {
         filter: plantFilter,
@@ -770,7 +720,6 @@ function animatePlant(track, step) {
 function initEvents() {
   playButton.addEventListener('click', togglePlay);
   
-  // Only add these event listeners if not in read-only mode
   if (!isReadOnly) {
     randomButton.addEventListener('click', addRandomNote);
     tempoSlider.addEventListener('input', updateTempo);
@@ -782,7 +731,6 @@ function initEvents() {
       manualSaveGarden(); 
     });
   } else {
-    // In read-only mode, tempo slider should be disabled but still show value
     tempoSlider.disabled = true;
   }
 }
@@ -807,14 +755,12 @@ function updateTempo() {
 
 function getCurrentGardenState() {
     const plantsData = plantedItems.map(item => {
-        // Read current effect values from the plant's effects objects
         const currentAudioParams = {};
         if (item.userData.effects) {
             currentAudioParams.filterFreq = item.userData.effects.filter.frequency.value;
             currentAudioParams.chorusDepth = item.userData.effects.chorus.depth.value;
             currentAudioParams.delayFeedback = item.userData.effects.delay.feedback.value;
         } else {
-            // Fallback defaults if effects somehow missing
             console.warn("Plant missing effects during save, using defaults.", item.userData);
             currentAudioParams.filterFreq = 800;
             currentAudioParams.chorusDepth = 0.3;
@@ -825,7 +771,7 @@ function getCurrentGardenState() {
             track: item.userData.track,
             step: item.userData.step,
             plantModelIndex: item.userData.plantModelIndex,
-            audioParams: currentAudioParams, // Save the read values
+            audioParams: currentAudioParams,
             scale: item.scale.clone()
         }
     });
@@ -837,53 +783,26 @@ function getCurrentGardenState() {
     };
 }
 
-// Remove or comment out the old saveGardenData function and its beacon/fetch logic 
-// as it's replaced by manualSaveGarden and the new endpoint.
-/* 
-function saveGardenData() {
-    const gardenState = getCurrentGardenState();
-    const dataToSend = JSON.stringify({ gardenData: gardenState });
-
-    if (navigator.sendBeacon) {
-        navigator.sendBeacon('/api/savegarden', dataToSend);
-        console.log("Attempting to save garden data via sendBeacon:", gardenState);
-    } else {
-        console.warn("navigator.sendBeacon not available. Saving might fail.");
-        fetch('/api/savegarden', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: dataToSend,
-            keepalive: true
-        }).catch(error => console.error('Error saving garden data with fetch:', error));
-    }
-}
-*/
-
-// --- New Save Functionality ---
 function manualSaveGarden() {
-    // 播放保存音效
     AudioEffects.play('/samples/ui/save.wav');
     
-    const gardenState = getCurrentGardenState(); // Reuse existing function
+    const gardenState = getCurrentGardenState();
     console.log("Manually saving garden state:", gardenState);
 
-    fetch('/api/garden', { // 使用正确的API路径
+    fetch('/api/garden', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(gardenState), // Send the state directly
+        body: JSON.stringify(gardenState),
     })
     .then(response => {
         if (!response.ok) {
-            // Throw an error if response status is not 2xx
             return response.text().then(text => { 
                 throw new Error(`Save failed: ${response.status} ${response.statusText} - ${text}`) 
             });
         }
-        return response.json(); // Or response.text() if backend sends text
+        return response.json();
     })
     .then(data => {
         console.log('Save successful:', data);
@@ -891,7 +810,6 @@ function manualSaveGarden() {
     })
     .catch(error => {
         console.error('Error saving garden:', error);
-        // Optionally: Show an error notification to the user
         alert(`Failed to save garden: ${error.message}`); 
     });
 }
@@ -900,11 +818,10 @@ function showSaveNotification() {
     saveNotification.classList.add('show');
     setTimeout(() => {
         saveNotification.classList.remove('show');
-    }, 1500); // Shorter duration for better UX
+    }, 1500);
 }
 
 function onDocumentMouseClick(event) {
-  // Disable plant editing in read-only mode
   if (isReadOnly || isEditing) return;
 
   event.preventDefault();
@@ -953,43 +870,21 @@ function enterPlantEditor(plant) {
   controls.enableZoom = false;
   controls.enablePan = false;
 
-  // Create handles and setup DragControls
   createHandles(selectedPlant);
   if (editHandles.length > 0) {
     dragControls = new THREE.DragControls(editHandles, camera, renderer.domElement);
     dragControls.addEventListener('dragstart', onHandleDragStart);
     dragControls.addEventListener('drag', onHandleDrag);
     dragControls.addEventListener('dragend', onHandleDragEnd);
-
-    // --- Dynamic Audio Routing & Effect Creation ---
-    // console.log("Creating temporary effects chain for editing.");
-    // Dispose previous effects if any lingered (safety check)
-    // if (currentEditEffects) { ... }
-    // currentEditEffects = { ... }; // ReferenceError occurs here if uncommented
-
-    // console.log("Connecting player through temporary effects chain.");
-    // player.disconnect(Tone.Destination);
-    // player.chain(currentEditEffects.filter, currentEditEffects.chorus, currentEditEffects.delay, Tone.Destination); // ReferenceError occurs here if uncommented
-
-    // Apply initial audio params to temporary effects *after* connecting // REMOVED
-    // const params = selectedPlant.userData.audioParams; // These params don't exist anymore
-    // currentEditEffects.filter.frequency.value = params.filterFreq; // ReferenceError occurs here if uncommented
-    // currentEditEffects.chorus.depth.value = params.chorusDepth; // ReferenceError occurs here if uncommented
-    // currentEditEffects.delay.feedback.value = params.delayFeedback; // ReferenceError occurs here if uncommented
-
-    // NO audio graph changes needed on enter, plant has its own chain.
   } else {
     console.error("Failed to create edit handles.");
   }
-
-  // TODO: Show editor UI
 }
 
 function exitPlantEditor() {
   if (!isEditing || isCameraAnimating) return;
   console.log("Exiting editor mode.");
 
-  // Clean up editor state BEFORE animating back
   if (dragControls) {
     dragControls.removeEventListener('dragstart', onHandleDragStart);
     dragControls.removeEventListener('drag', onHandleDrag);
@@ -999,12 +894,6 @@ function exitPlantEditor() {
   }
   removeHandles();
 
-  // console.log("Disconnecting effects chain, reconnecting player directly.");
-  // if (selectedPlant && selectedPlant.userData.effects) { ... } // Removed in previous step
-
-  // player.connect(Tone.Destination); // REMOVE THIS LINE - Causes ReferenceError
-
-  // Restore scene immediately
   ambientLight.intensity = originalAmbientIntensity;
   directionalLight.intensity = originalDirectionalIntensity;
   scene.fog = originalFog;
@@ -1021,16 +910,14 @@ function exitPlantEditor() {
   selectedPlant = null;
   isEditing = false;
   console.log("Started exit animation.");
-  // TODO: Hide editor UI immediately
 }
 
-// Placeholder Handle Functions
 function createHandles(object) {
-    removeHandles(); // Clear any previous handles
+    removeHandles();
 
     const handleSize = 0.15;
-    const handleGeometry = new THREE.BoxGeometry(handleSize, handleSize, handleSize); // Use cubes
-    const colors = { x: 0xff0000, y: 0x00ff00, z: 0x0000ff }; // R, G, B
+    const handleGeometry = new THREE.BoxGeometry(handleSize, handleSize, handleSize);
+    const colors = { x: 0xff0000, y: 0x00ff00, z: 0x0000ff };
     const axes = ['x', 'y', 'z'];
 
     const bbox = new THREE.Box3().setFromObject(object);
@@ -1040,14 +927,11 @@ function createHandles(object) {
     axes.forEach(axis => {
         const handleMaterial = new THREE.MeshBasicMaterial({ color: colors[axis], transparent: true, opacity: 0.8 });
         const handle = new THREE.Mesh(handleGeometry, handleMaterial);
-        handle.userData.axis = axis; // Store the axis
+        handle.userData.axis = axis;
 
-        // Position handle along the positive axis direction from the center
         const position = objectCenter.clone();
-        position[axis] += objectSize[axis] / 2 + handleSize * 2; // Offset from the edge
+        position[axis] += objectSize[axis] / 2 + handleSize * 2;
         handle.position.copy(position);
-        
-        // TODO: Consider handle rotation for better visual alignment?
         
         scene.add(handle);
         editHandles.push(handle);
@@ -1063,35 +947,31 @@ function removeHandles() {
         if (handle.material) handle.material.dispose();
     });
     editHandles = [];
-    // console.log("Removed handles");
 }
 
-// Placeholder - needs proper implementation based on handle positions
 function updateHandlePositions(object, handles) {
     if (!handles || handles.length === 0) return;
     
     const bbox = new THREE.Box3().setFromObject(object);
     const objectSize = bbox.getSize(new THREE.Vector3());
     const objectCenter = bbox.getCenter(new THREE.Vector3());
-    const handleSize = handles[0].geometry.parameters.width; // Assuming all handles are same size cubes
+    const handleSize = handles[0].geometry.parameters.width;
 
     handles.forEach(handle => {
         const axis = handle.userData.axis;
         if (!axis) return;
         
         const position = objectCenter.clone();
-        position[axis] += objectSize[axis] / 2 + handleSize * 2; // Same logic as creation
+        position[axis] += objectSize[axis] / 2 + handleSize * 2;
         handle.position.copy(position);
     });
 }
 
-// DragControls Event Handlers
 function onHandleDragStart(event) {
     console.log("Drag Start");
     controls.enableRotate = false;
-    // Store starting state on the dragged handle
     event.object.userData.startDragPosition = event.object.position.clone();
-    if (selectedPlant) { // Ensure plant exists
+    if (selectedPlant) {
         event.object.userData.startPlantScale = selectedPlant.scale.clone();
     }
 }
@@ -1099,63 +979,45 @@ function onHandleDragStart(event) {
 function onHandleDrag(event) {
     const dragObject = event.object;
     if (!selectedPlant || !editHandles.includes(dragObject) || !dragObject.userData.axis || !dragObject.userData.startDragPosition || !dragObject.userData.startPlantScale) {
-        // console.warn("Drag event skipped, missing data");
-        return; // Exit if data wasn't properly initialized in dragStart
+        return;
     }
 
     const axis = dragObject.userData.axis;
     
-    // Calculate handle's position delta since drag start
     const currentPosition = dragObject.position;
     const startPosition = dragObject.userData.startDragPosition;
     const deltaPosition = currentPosition.clone().sub(startPosition);
 
-    // Simple mapping: Use the delta along the handle's primary axis
     const displacement = deltaPosition[axis]; 
     
-    const sensitivity = 3.0; // Adjust sensitivity as needed
+    const sensitivity = 3.0;
     const scaleChange = displacement * sensitivity;
 
-    // Apply scale change relative to the starting scale
     const startScaleValue = dragObject.userData.startPlantScale[axis];
     const newScaleValue = startScaleValue + scaleChange;
     const clampedScaleValue = Math.max(minSize, Math.min(newScaleValue, maxSize));
 
     selectedPlant.scale[axis] = clampedScaleValue;
     
-    // Update handle positions visually based on the new plant scale
     updateHandlePositions(selectedPlant, editHandles);
     
-    // --- Override DragControls position --- 
-    // Find the updated position of *this specific* dragged handle
     const updatedHandleData = editHandles.find(h => h === dragObject);
     if (updatedHandleData) {
-        // Reset the dragged object's position to where updateHandlePositions placed it.
-        // This prevents DragControls internal logic from fighting our scaling logic.
         dragObject.position.copy(updatedHandleData.position);
     }
-    // --- End Override --- 
 
-    // Map potentially non-uniform scale to audio parameters
-    // Now using scale of 1.0 as the neutral point (no effect)
     const scale = selectedPlant.scale;
     
-    // Changed range to start from 0 for clean audio at default scale
-    // MODIFIED: Invert filter frequency mapping - higher values mean lower cutoff
-    const freq = scale.x <= 1.05 ? 0 : map(scale.x, minSize, maxSize, 0, 3000); // X scale -> Filter Frequency
-    const chorDepth = map(scale.y, minSize, maxSize, 0, 0.9); // Y scale -> Chorus Depth 
-    const delayFb = map(scale.z, minSize, maxSize, 0, 0.7); // Z scale -> Delay Feedback
+    const freq = scale.x <= 1.05 ? 0 : map(scale.x, minSize, maxSize, 0, 3000);
+    const chorDepth = map(scale.y, minSize, maxSize, 0, 0.9);
+    const delayFb = map(scale.z, minSize, maxSize, 0, 0.7);
 
-    // Update Tone.js effects in real-time (if they exist)
-    // Apply directly to the selected plant's persistent effects
     if (selectedPlant && selectedPlant.userData.effects) {
-        // MODIFIED: Apply inverted frequency mapping
         selectedPlant.userData.effects.filter.frequency.value = freq === 0 ? 20000 : (3000 - freq + 300);
         selectedPlant.userData.effects.chorus.depth.value = chorDepth;
         selectedPlant.userData.effects.delay.feedback.value = delayFb;
     }
 
-    // Store current audio params back to userData (so they are saved on exit)
     selectedPlant.userData.audioParams = {
         filterFreq: freq,
         chorusDepth: chorDepth,
@@ -1165,27 +1027,21 @@ function onHandleDrag(event) {
 
 function onHandleDragEnd(event) {
     console.log("Drag End");
-    // Clear starting drag data from handle
     if (event.object.userData) {
         delete event.object.userData.startPlantScale;
-        delete event.object.userData.startDragPosition; // Clear position too
+        delete event.object.userData.startDragPosition;
     }
-    // Re-enable OrbitControls rotation after handle drag (if still in editor mode)
     if (isEditing) {
         controls.enableRotate = true;
     }
 }
 
-// Utility function for mapping values with special handling for neutral point
 function map(value, inMin, inMax, outMin, outMax) {
-  // Special case: if value is close to 1.0 (default scale), return outMin (no effect)
   if (Math.abs(value - 1.0) < 0.05) {
     return outMin;
   }
   
-  // Clamp value to input range
   const clampedValue = Math.max(inMin, Math.min(value, inMax));
-  // Perform linear interpolation
   return (clampedValue - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
 }
 
@@ -1230,7 +1086,6 @@ function updateCameraAnimation() {
             controls.enablePan = true;
             controls.enableRotate = true;
             console.log("Camera animation finished - Editor exited.");
-            // TODO: Restore scene / show other plants
         }
         controls.update();
     }
@@ -1239,16 +1094,13 @@ function updateCameraAnimation() {
 function applyReadOnlyMode() {
   console.log('Applying read-only mode restrictions');
   
-  // Hide any editing UI elements
   if (randomButton) {
     randomButton.style.display = 'none';
   }
   
-  // Make tempo slider read-only
   if (tempoSlider) {
     tempoSlider.disabled = true;
   }
   
-  // Add a class to body for CSS styling in read-only mode
   document.body.classList.add('readonly-mode');
 }

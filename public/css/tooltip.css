@@ -1,0 +1,151 @@
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  text-align: center;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 100;
+  font-family: 'PPPangaia', sans-serif;
+  
+  position: absolute;
+  z-index: 2000;
+  white-space: nowrap;
+  
+  opacity: 0;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
+.back-button-tooltip {
+  bottom: -30px;
+  left: 0;
+}
+
+.explore-button-tooltip {
+  bottom: -30px;
+  left: 0;
+}
+
+.ambient-icon-tooltip {
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 10px;
+}
+
+.save-button-tooltip {
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.name-button-tooltip {
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.play-button-tooltip {
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 10px;
+}
+
+.random-note-tooltip {
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 10px;
+}
+
+.ambient-selector .tooltip {
+  display: block;
+  position: relative;
+}
+
+.ambient-selector .tooltip img.ambient-icon {
+  display: block;
+  position: relative;
+}
+
+.controls {
+  position: fixed;
+  bottom: 30px;
+  left: 0;
+  width: 100%;
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.controls .tooltip {
+  display: inline-block;
+  position: relative;
+}
+
+#save-button {
+  position: fixed !important;
+  bottom: 360px !important;
+  right: 100px !important;
+  z-index: 10 !important;
+}
+
+#save-button img.save-button {
+  width: 5vw;
+  height: 5vw;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+#name-button {
+  position: fixed !important;
+  bottom: 250px !important;
+  right: 15px !important;
+  z-index: 10 !important;
+}
+
+#name-button img.name-button {
+  max-width: 7vw;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+/* Fix positions for play and random buttons */
+.controls .tooltip:first-child {
+  position: fixed;
+  bottom: 40px;
+  right: 300px;
+}
+
+.controls .tooltip:last-child {
+  position: fixed;
+  bottom: 10px;
+  right: 90px;
+}
+
+#play-button {
+  width: 15vw !important;
+  height: 15vw !important;
+  background: url('/img/play.webp') no-repeat center center !important;
+  background-size: contain !important;
+}
+
+#random-note {
+  width: 10vw !important;
+  height: 10vw !important;
+  background: url('/img/plant.webp') no-repeat center center !important;
+  background-size: contain !important;
+} 

@@ -9,7 +9,6 @@
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/transition.css">
   
-  <!-- 预加载木质背景图片，确保过渡时无缝衔接 -->
   <link rel="preload" as="image" href="/img/wood.jpg">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -28,10 +27,8 @@
     </div>
   <% } %>
   
-  <!-- Auth bookmarks -->
   <div class="auth-bookmarks">
     <% if (!user) { %>
-      <!-- Login/Signup bookmarks (shown when logged out) -->
       <a href="/login" class="bookmark-link login-link">
         <img src="/img/login.webp" class="bookmark login" alt="Login">
       </a>
@@ -39,14 +36,12 @@
         <img src="/img/signup.webp" class="bookmark signup" alt="Sign Up">
       </a>
     <% } else { %>
-      <!-- Logout bookmark (shown when logged in) -->
       <a href="/logout" class="bookmark-link logout-link">
         <img src="/img/logout.webp" class="bookmark logout" alt="Logout">
       </a>
     <% } %>
   </div>
   
-  <!-- Bookmarks in bottom right corner -->
   <% if (user) { %>
     <a href="/mygarden" data-transition="true">
       <img src="/img/your_garden.webp" class="bookmark garden" alt="Your Garden">
@@ -57,7 +52,6 @@
     <img src="/img/explore.webp" class="bookmark explore" alt="Explore">
   </a>
   
-  <!-- Transition Layer -->
   <div class="cd-transition-layer"> 
     <div class="bg-layer"></div>
   </div>

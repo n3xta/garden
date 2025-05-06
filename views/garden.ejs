@@ -7,14 +7,12 @@
 
   <link rel="stylesheet" href="/css/garden.css">
   <link rel="stylesheet" href="/css/transition.css">
+  <link rel="stylesheet" href="/css/tooltip.css">
   
-  <!-- 预先加载transition.js以确保早于garden.js执行 -->
   <script src="/js/transition.js"></script>
   
-  <!-- 添加音效模块 -->
   <script src="/js/main.js"></script>
   
-  <!-- 将这些库放在后面，避免阻塞transition的初始化 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -24,38 +22,50 @@
 </head>
 
 <body>
-  <!-- Back to Home button in the top left corner -->
   <a href="/" data-transition="true">
     <img src="/img/back.webp" class="back-button" alt="Back to Home">
   </a>
   
-  <!-- Explore button -->
   <a href="/explore" data-transition="true">
     <img src="/img/explore.webp" class="explore-button" alt="Explore">
   </a>
 
-  <!-- Ambient Sound Selector -->
   <div class="ambient-selector">
-    <img src="/img/ambient1.webp" class="ambient-icon" data-sound="1" alt="Ambient Sound 1">
-    <img src="/img/ambient2.webp" class="ambient-icon" data-sound="2" alt="Ambient Sound 2">
-    <img src="/img/ambient3.webp" class="ambient-icon" data-sound="3" alt="Ambient Sound 3">
-    <img src="/img/ambient4.webp" class="ambient-icon" data-sound="4" alt="Ambient Sound 4">
-    <img src="/img/no_ambient.webp" class="ambient-icon" data-sound="none" alt="No Ambient Sound">
+    <div class="tooltip">
+      <img src="/img/ambient1.webp" class="ambient-icon" data-sound="1" alt="Ambient Sound 1">
+      <span class="tooltiptext ambient-icon-tooltip">Ambient Sound 1</span>
+    </div>
+    <div class="tooltip">
+      <img src="/img/ambient2.webp" class="ambient-icon" data-sound="2" alt="Ambient Sound 2">
+      <span class="tooltiptext ambient-icon-tooltip">Ambient Sound 2</span>
+    </div>
+    <div class="tooltip">
+      <img src="/img/ambient3.webp" class="ambient-icon" data-sound="3" alt="Ambient Sound 3">
+      <span class="tooltiptext ambient-icon-tooltip">Ambient Sound 3</span>
+    </div>
+    <div class="tooltip">
+      <img src="/img/ambient4.webp" class="ambient-icon" data-sound="4" alt="Ambient Sound 4">
+      <span class="tooltiptext ambient-icon-tooltip">Ambient Sound 4</span>
+    </div>
+    <div class="tooltip">
+      <img src="/img/no_ambient.webp" class="ambient-icon" data-sound="none" alt="No Ambient Sound">
+      <span class="tooltiptext ambient-icon-tooltip">No Ambient Sound</span>
+    </div>
   </div>
 
-  <!-- Save button (only show if not in read-only mode) -->
+  <!-- read-only mode or not handling -->
   <% if (!locals.isReadOnly) { %>
-  <a href="#" id="save-button">
+  <a href="#" id="save-button" class="tooltip">
     <img src="/img/save.webp" class="save-button" alt="Save Garden">
+    <span class="tooltiptext save-button-tooltip">Save Garden</span>
   </a>
   
-  <!-- Name button -->
-  <a href="#" id="name-button">
+  <a href="#" id="name-button" class="tooltip">
     <img src="/img/name.webp" class="name-button" alt="Name Garden">
+    <span class="tooltiptext name-button-tooltip">Name Garden</span>
   </a>
   <% } %>
 
-  <!-- Read-only mode banner (only show in read-only mode) -->
   <% if (locals.isReadOnly) { %>
   <div class="readonly-banner">
     <p>Viewing <strong><%= user.username %>'s</strong> garden</p>
@@ -64,7 +74,6 @@
     <% } %>
   </div>
   <% } else { %>
-  <!-- Garden name display - only show when the garden has a name and not in read-only mode -->
   <div id="garden-name-display" class="garden-name-display">
     <h3><%= locals.gardenName || 'My Garden' %></h3>
   </div>
@@ -73,10 +82,16 @@
   <div id="three-container"></div>
 
   <div class="controls">
-    <button id="play-button" aria-label="Play/Pause"></button>
+    <div class="tooltip">
+      <button id="play-button" aria-label="Play/Pause"></button>
+      <span class="tooltiptext play-button-tooltip">Play/Pause</span>
+    </div>
     <input type="range" id="tempo-slider" min="40" max="240" value="80">
     <% if (!locals.isReadOnly) { %>
-    <button id="random-note" aria-label="Plant a random note"></button>
+    <div class="tooltip">
+      <button id="random-note" aria-label="Plant a random note"></button>
+      <span class="tooltiptext random-note-tooltip">Plant Random Note</span>
+    </div>
     <% } %>
   </div>
 
@@ -87,7 +102,6 @@
        data-garden-name='<%= locals.gardenName || "" %>'
        data-background-id='<%= locals.backgroundId || "" %>'></div>
   
-  <!-- Garden Name Modal - Updated to match search overlay style -->
   <div id="name-modal" class="modal">
     <div class="modal-content">
       <span class="close-button">&times;</span>
@@ -96,18 +110,14 @@
     </div>
   </div>
   
-  <!-- Transition Layer -->
   <div class="cd-transition-layer"> 
     <div class="bg-layer"></div>
   </div>
 
-  <!-- Saved Notification -->
   <div id="save-notification" class="save-notification">Saved!</div>
   
-  <!-- Name Saved Notification -->
   <div id="name-notification" class="save-notification">Name Saved!</div>
 
-  <!-- Load garden.js with integrated ambient sound and garden name functionality -->
   <script src="/js/garden.js"></script>
 </body>
 </html>
