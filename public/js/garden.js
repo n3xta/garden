@@ -1,3 +1,259 @@
+// Ambient Sound Manager
+const AmbientSoundManager = {
+  // The current ambient sound player
+  player: null,
+  
+  // The currently active sound (null means no sound)
+  currentSound: null,
+  
+  // Flag to track if we're waiting for user interaction to play
+  pendingAutoplay: false,
+  
+  // Initialize the ambient sound manager
+  init: function() {
+    // Wait until the document is fully loaded and interacted with (for autoplay policies)
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => this.setupListeners());
+    } else {
+      this.setupListeners();
+    }
+    
+    // Add additional event for ensuring audio can play after user interaction
+    document.addEventListener('click', () => {
+      // This empty function ensures we've had user interaction,
+      // which browsers require for autoplay
+      if (this.pendingAutoplay && this.currentSound) {
+        this.playCurrentSound();
+        this.pendingAutoplay = false;
+      }
+    }, { once: true });
+    
+    // Listen for Tone.js start events - if Tone.js is started, we can also start our ambient sound
+    document.addEventListener('tone.start', () => {
+      if (this.pendingAutoplay && this.currentSound) {
+        this.playCurrentSound();
+        this.pendingAutoplay = false;
+      }
+    });
+  },
+  
+  // Set up event listeners for ambient icons
+  setupListeners: function() {
+    const ambientIcons = document.querySelectorAll('.ambient-icon');
+    
+    // Add click event listeners to all ambient icons
+    ambientIcons.forEach(icon => {
+      icon.addEventListener('click', () => {
+        const soundNumber = icon.dataset.sound;
+        this.switchSound(soundNumber);
+        
+        // Update active state for all icons
+        ambientIcons.forEach(i => i.classList.remove('active'));
+        icon.classList.add('active');
+      });
+    });
+    
+    // Initialize with no sound active
+    document.querySelector('.ambient-icon[data-sound="none"]').classList.add('active');
+  },
+  
+  // Play the current sound (handles browser autoplay restrictions)
+  playCurrentSound: function() {
+    if (!this.player) return;
+    
+    const playPromise = this.player.play();
+    
+    // Handle the play promise to catch autoplay restrictions
+    if (playPromise !== undefined) {
+      playPromise.catch(error => {
+        console.warn('Autoplay prevented. Will play after user interaction:', error);
+        this.pendingAutoplay = true;
+      });
+    }
+  },
+  
+  // Switch to a different ambient sound
+  switchSound: function(soundNumber) {
+    // Stop the current sound if playing
+    if (this.player) {
+      this.player.pause();
+      this.player = null;
+    }
+    
+    // If soundNumber is null or 'none', don't play anything
+    if (!soundNumber || soundNumber === 'none') {
+      this.currentSound = null;
+      return;
+    }
+    
+    // Create a new audio player
+    this.player = new Audio(`/samples/ambient/${soundNumber}.wav`);
+    this.player.loop = true;
+    this.player.volume = 0.4; // Lower volume to blend better with garden sounds
+    this.currentSound = soundNumber;
+    
+    // Try to play, but handle autoplay restrictions
+    this.playCurrentSound();
+  }
+};
+
+// Initialize the ambient sound manager
+AmbientSoundManager.init();
+
+// Dispatch a custom event when Tone.js starts
+// This helps coordinate our audio with Tone.js
+document.addEventListener('DOMContentLoaded', () => {
+  const originalToneStart = Tone.start;
+  if (originalToneStart) {
+    Tone.start = async function() {
+      await originalToneStart.apply(this, arguments);
+      // After Tone.js starts, dispatch our custom event
+      document.dispatchEvent(new Event('tone.start'));
+      return;
+    };
+  }
+});
+
+// Garden Name Manager
+document.addEventListener('DOMContentLoaded', function() {
+  // Elements
+  const modal = document.getElementById('name-modal');
+  const nameButton = document.getElementById('name-button');
+  const closeButton = document.querySelector('.close-button');
+  const cancelButton = document.getElementById('cancel-name');
+  const saveButton = document.getElementById('save-name');
+  const nameInput = document.getElementById('garden-name-input');
+  const nameDisplay = document.getElementById('garden-name-display');
+  const nameDisplayText = nameDisplay ? nameDisplay.querySelector('h3') : null;
+  const nameNotification = document.getElementById('name-notification');
+  const gardenDataElement = document.getElementById('garden-data');
+
+  // Get saved garden name if any
+  const savedName = gardenDataElement ? gardenDataElement.getAttribute('data-garden-name') : '';
+  
+  // Set initial garden name in the display and form
+  if (nameDisplayText && savedName) {
+    nameDisplayText.textContent = savedName;
+    if (nameInput) nameInput.value = savedName;
+  }
+
+  // Functions
+  function openModal() {
+    if (modal) {
+      if (savedName) {
+        nameInput.value = savedName;
+      }
+      modal.style.display = 'block';
+      nameInput.focus();
+      
+      // Play UI sound effect
+      if (typeof AudioEffects !== 'undefined') {
+        AudioEffects.play('/samples/ui/paper.wav');
+      }
+    }
+  }
+
+  function closeModal() {
+    if (modal) {
+      modal.style.display = 'none';
+    }
+  }
+
+  function saveGardenName() {
+    const newName = nameInput.value.trim();
+    if (!newName) return; // Don't save empty names
+    
+    // Play save sound
+    if (typeof AudioEffects !== 'undefined') {
+      AudioEffects.play('/samples/ui/save.wav');
+    }
+    
+    // Send the name to the server
+    fetch('/api/garden/name', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name: newName }),
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to save garden name');
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Garden name saved:', data);
+      
+      // Update the displayed name
+      if (nameDisplayText) {
+        nameDisplayText.textContent = newName;
+      }
+      
+      // Update the data attribute for future use
+      if (gardenDataElement) {
+        gardenDataElement.setAttribute('data-garden-name', newName);
+      }
+      
+      // Show saved notification
+      showNameSavedNotification();
+      
+      // Close the modal
+      closeModal();
+    })
+    .catch(error => {
+      console.error('Error saving garden name:', error);
+      alert('Failed to save garden name. Please try again.');
+    });
+  }
+
+  function showNameSavedNotification() {
+    if (nameNotification) {
+      nameNotification.classList.add('show');
+      setTimeout(() => {
+        nameNotification.classList.remove('show');
+      }, 2500);
+    }
+  }
+
+  // Event Listeners
+  if (nameButton) {
+    nameButton.addEventListener('click', function(e) {
+      e.preventDefault();
+      openModal();
+    });
+  }
+
+  if (closeButton) {
+    closeButton.addEventListener('click', closeModal);
+  }
+
+  if (cancelButton) {
+    cancelButton.addEventListener('click', closeModal);
+  }
+
+  if (saveButton) {
+    saveButton.addEventListener('click', saveGardenName);
+  }
+
+  if (nameInput) {
+    nameInput.addEventListener('keyup', function(e) {
+      if (e.key === 'Enter') {
+        saveGardenName();
+      } else if (e.key === 'Escape') {
+        closeModal();
+      }
+    });
+  }
+
+  // Close modal when clicking outside of it
+  window.addEventListener('click', function(e) {
+    if (e.target === modal) {
+      closeModal();
+    }
+  });
+});
+
 // 获取garden数据
 document.addEventListener('DOMContentLoaded', function() {
   const gardenDataElement = document.getElementById('garden-data');

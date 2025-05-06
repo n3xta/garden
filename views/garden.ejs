@@ -6,14 +6,12 @@
 
   <link rel="stylesheet" href="/css/garden.css">
   <link rel="stylesheet" href="/css/transition.css">
-  <link rel="stylesheet" href="/css/ambient-selector.css">
-  <link rel="stylesheet" href="/css/garden-name.css">
   
   <!-- 预先加载transition.js以确保早于garden.js执行 -->
   <script src="/js/transition.js"></script>
   
   <!-- 添加音效模块 -->
-  <script src="/js/audio.js"></script>
+  <script src="/js/main.js"></script>
   
   <!-- 将这些库放在后面，避免阻塞transition的初始化 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -112,9 +110,7 @@
   <!-- Name Saved Notification -->
   <div id="name-notification" class="save-notification">Name Saved!</div>
 
-  <!-- 加载garden相关JS -->
-  <script src="/js/ambient-sound.js"></script>
-  <script src="/js/garden-name.js"></script>
+  <!-- Load garden.js with integrated ambient sound and garden name functionality -->
   <script src="/js/garden.js"></script>
 </body>
 </html>

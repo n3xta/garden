@@ -247,3 +247,211 @@ input[type="range"]::-moz-range-thumb {
     padding: 4px 8px;
   }
 }
+
+/* Ambient Sound Selector Styles */
+.ambient-selector {
+  position: fixed;
+  top: 90px; /* Position below the back button */
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 100;
+}
+
+.ambient-icon {
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out, opacity 0.2s ease-in-out;
+  opacity: 0.6;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.2); /* Slight background for better visibility */
+  padding: 5px;
+}
+
+.ambient-icon:hover {
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+.ambient-icon.active {
+  opacity: 1;
+  border: 2px solid #8FBC8F;
+  box-shadow: 0 0 8px rgba(143, 188, 143, 0.7);
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+  .ambient-selector {
+    top: 80px;
+    left: 10px;
+  }
+  
+  .ambient-icon {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* Garden Name UI Styles */
+
+/* Name Button */
+.name-button {
+  position: fixed;
+  top: 20px;
+  right: 90px; /* Position to the left of save button */
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  z-index: 10;
+}
+
+.name-button:hover {
+  transform: scale(1.1);
+}
+
+/* Garden Name Display */
+.garden-name-display {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  background-color: rgba(0, 0, 0, 0.4);
+  color: white;
+  padding: 5px 12px;
+  border-radius: 8px;
+  max-width: 200px;
+  text-align: center;
+  z-index: 5;
+}
+
+.garden-name-display h3 {
+  margin: 0;
+  font-family: 'PPPangaia', sans-serif;
+  font-weight: 300;
+  font-size: 1.1em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Modal styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 100;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(3px);
+}
+
+.modal-content {
+  background-color: #1a1a1a;
+  border: 2px solid #444;
+  border-radius: 10px;
+  margin: 15% auto;
+  padding: 25px;
+  width: 80%;
+  max-width: 400px;
+  color: white;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  animation: modalFadeIn 0.3s ease-out;
+  position: relative;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #8FBC8F;
+  font-family: 'PPPangaia', sans-serif;
+  font-weight: bold;
+  text-align: center;
+}
+
+#garden-name-input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 20px;
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 5px;
+  color: white;
+  font-family: 'PPPangaia', sans-serif;
+  font-size: 1em;
+  box-sizing: border-box;
+}
+
+#garden-name-input:focus {
+  border-color: #8FBC8F;
+  outline: none;
+  box-shadow: 0 0 5px rgba(143, 188, 143, 0.5);
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+}
+
+.modal-buttons button {
+  padding: 8px 20px;
+  font-family: 'PPPangaia', sans-serif;
+  font-weight: 500;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+#save-name {
+  background-color: #8FBC8F;
+  color: white;
+}
+
+#save-name:hover {
+  background-color: #7aa87a;
+}
+
+#cancel-name {
+  background-color: #444;
+  color: white;
+}
+
+#cancel-name:hover {
+  background-color: #555;
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  color: #aaa;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close-button:hover {
+  color: white;
+}
+
+/* Name Save Notification */
+#name-notification {
+  background-color: #8FBC8F;
+}
