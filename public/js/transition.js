@@ -158,11 +158,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 预加载图片
     var imagesToPreload = [
-      '/img/login_form.png',
-      '/img/save.png',
-      '/img/letter.png',
-      '/img/login.png',
-      '/img/signup.png'
+      '/img/login_form.webp',
+      '/img/save.webp',
+      '/img/letter.webp',
+      '/img/login.webp',
+      '/img/signup.webp'
     ];
     
     imagesToPreload.forEach(function(src) {

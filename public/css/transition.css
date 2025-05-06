@@ -94,7 +94,7 @@ body.js-loading-ready {
   height: 100%;
   /* sprite is composed of 25 frames */
   width: 2500%;
-  background: url(../img/ink.png) no-repeat 0 0;
+  background: url(../img/ink.webp) no-repeat 0 0;
   background-size: 100% 100%;
   
   /* 方法1: 强力黑色滤镜 */
@@ -110,10 +110,10 @@ body.js-loading-ready {
   image-rendering: crisp-edges;
   
   /* 方法2: 黑色蒙版方式（如果方法1效果不理想，可以取消这段注释，并注释掉方法1）
-  -webkit-mask-image: url(../img/ink.png);
+  -webkit-mask-image: url(../img/ink.webp);
   -webkit-mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat;
-  mask-image: url(../img/ink.png);
+  mask-image: url(../img/ink.webp);
   mask-size: 100% 100%;
   mask-repeat: no-repeat;
   background: #000; 

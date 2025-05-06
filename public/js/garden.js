@@ -156,8 +156,10 @@ function initializeGardenFromData() {
         if (plant && plantData.audioParams) {
             // Apply loaded params to the plant's specific effects
             if (plant.userData.effects) {
-                // Now using the values as they were saved without changes
-                plant.userData.effects.filter.frequency.value = plantData.audioParams.filterFreq !== undefined ? plantData.audioParams.filterFreq : 0;
+                // MODIFIED: Invert filter frequency interpretation
+                // 0 means no filtering (high frequency) and high values mean more filtering (low frequency)
+                const filterFreq = plantData.audioParams.filterFreq !== undefined ? plantData.audioParams.filterFreq : 0;
+                plant.userData.effects.filter.frequency.value = filterFreq === 0 ? 20000 : (3000 - filterFreq + 300);
                 plant.userData.effects.chorus.depth.value = plantData.audioParams.chorusDepth !== undefined ? plantData.audioParams.chorusDepth : 0;
                 plant.userData.effects.delay.feedback.value = plantData.audioParams.delayFeedback !== undefined ? plantData.audioParams.delayFeedback : 0;
             } else {
@@ -466,8 +468,8 @@ function createPlant(track, step, plantModelIndex) {
   // --- Create Sampler and Effects PER PLANT ---
   const plantSampler = new Tone.Sampler(sampleMap).toDestination(); // Initial connection to destination
   
-  // Use "clean" audio settings with no effect by default
-  const plantFilter = new Tone.Filter(0, "lowpass"); // 0 frequency = no filtering effect
+  // MODIFIED: Set default filter frequency to 20000 (no filtering)
+  const plantFilter = new Tone.Filter(20000, "lowpass"); // High frequency = no filtering effect
   const plantChorus = new Tone.Chorus(4, 2.5, 0).start(); // 0 depth = no chorus effect
   const plantDelay = new Tone.FeedbackDelay("8n", 0); // 0 feedback = no delay effect
   const plantGain = new Tone.Gain(0.3); // Lower volume overall
@@ -892,14 +894,16 @@ function onHandleDrag(event) {
     const scale = selectedPlant.scale;
     
     // Changed range to start from 0 for clean audio at default scale
-    const freq = map(scale.x, minSize, maxSize, 0, 3000); // X scale -> Filter Frequency
+    // MODIFIED: Invert filter frequency mapping - higher values mean lower cutoff
+    const freq = scale.x <= 1.05 ? 0 : map(scale.x, minSize, maxSize, 0, 3000); // X scale -> Filter Frequency
     const chorDepth = map(scale.y, minSize, maxSize, 0, 0.9); // Y scale -> Chorus Depth 
     const delayFb = map(scale.z, minSize, maxSize, 0, 0.7); // Z scale -> Delay Feedback
 
     // Update Tone.js effects in real-time (if they exist)
     // Apply directly to the selected plant's persistent effects
     if (selectedPlant && selectedPlant.userData.effects) {
-        selectedPlant.userData.effects.filter.frequency.value = freq;
+        // MODIFIED: Apply inverted frequency mapping
+        selectedPlant.userData.effects.filter.frequency.value = freq === 0 ? 20000 : (3000 - freq + 300);
         selectedPlant.userData.effects.chorus.depth.value = chorDepth;
         selectedPlant.userData.effects.delay.feedback.value = delayFb;
     }

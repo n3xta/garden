@@ -15,7 +15,7 @@ html, body {
   width: calc(100% + 200px); /* 增加宽度 */
   height: calc(100% + 200px); /* 增加高度 */
   z-index: -1;
-  background: url('/img/main_bg.png') no-repeat center center;
+  background: url('/img/main_bg.webp') no-repeat center center;
   background-size: cover;
   opacity: 1;
   will-change: transform;
@@ -324,7 +324,7 @@ html {
   width: calc(100% + 400px) !important; /* 显著加大背景尺寸 */
   height: calc(100% + 400px) !important;
   z-index: -1;
-  background: url('/img/main_bg.png') no-repeat center center;
+  background: url('/img/main_bg.webp') no-repeat center center;
   background-size: cover;
   opacity: 1;
   will-change: transform;

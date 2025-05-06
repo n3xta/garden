@@ -27,7 +27,7 @@ body {
   width: calc(100% + 200px);
   height: calc(100% + 200px);
   z-index: -1;
-  background: url('/img/explore_bg.png') no-repeat center center;
+  background: url('/img/explore_bg.webp') no-repeat center center;
   background-size: cover;
   opacity: 1;
   will-change: transform;

@@ -41,7 +41,7 @@ function addSaveButtonToCorner() {
   saveContainer.className = 'save-btn-container';
   
   // Get reference to the image path from the hidden button
-  let imgSrc = '/img/save.png';
+  let imgSrc = '/img/save.webp';
   const existingImg = document.querySelector('.submit-img');
   if (existingImg) {
     imgSrc = existingImg.getAttribute('src');
