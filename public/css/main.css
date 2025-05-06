@@ -8,31 +8,40 @@ html, body {
   background-color: #000; /* 黑色背景，这样即使露出一点边缘也不明显 */
 }
 
+/* 通用背景设置 - 基础样式 */
 .background {
   position: fixed;
-  top: -100px; /* 增加负边距以提供更多出血区域 */
-  left: -100px; /* 增加负边距以提供更多出血区域 */
-  width: calc(100% + 200px); /* 增加宽度 */
-  height: calc(100% + 200px); /* 增加高度 */
+  top: -100px; 
+  left: -100px; 
+  width: calc(100% + 200px); 
+  height: calc(100% + 200px); 
   z-index: -1;
-  background: url('/img/main_bg.webp') no-repeat center center;
   background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
   opacity: 1;
   will-change: transform;
 }
 
-/* 同样的放大样式应用于auth页面的木质背景 */
-.auth-page .background {
-  top: -100px;
-  left: -100px;
-  width: calc(100% + 200px);
-  height: calc(100% + 200px);
-  background-image: url('/img/wood.jpg') !important;
-  background-size: cover;
-  opacity: 1 !important;
+/* 首页背景 */
+.background {
+  background-image: url('/img/main_bg.webp');
 }
 
-/* 木质背景过渡层也需要相同的尺寸 */
+/* 认证页面背景 */
+.auth-page .background {
+  top: -100px !important;
+  left: -100px !important;
+  width: calc(100% + 200px) !important;
+  height: calc(100% + 200px) !important;
+  background-image: url('/img/wood.jpg') !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  opacity: 1 !important;
+  z-index: -1 !important;
+}
+
+/* 木质背景过渡层 */
 .transition-overlay {
   position: fixed;
   bottom: -100%; /* Start from below the viewport */
@@ -42,7 +51,7 @@ html, body {
   z-index: 999;
   background: url('/img/wood.jpg') no-repeat center center;
   background-size: cover;
-  transition: bottom 1s cubic-bezier(0.19, 1, 0.22, 1); /* Exponential decrease curve */
+  transition: bottom 2s cubic-bezier(0.19, 1, 0.22, 1); /* 从1秒改为2秒，让动画变慢 */
 }
 
 @font-face {
@@ -123,6 +132,13 @@ body {
   transform: rotate(97deg);
 }
 
+.bookmark.logout {
+  top: -1vh;
+  left: 0vh;
+  transform: rotate(277deg);
+}
+
+/* Hover效果统一样式 */
 .bookmark.login:hover {
   transform: rotate(285deg) scale(1.1) translateX(-5vh);
 }
@@ -139,18 +155,18 @@ body {
   transform: rotate(105deg) scale(1.1) translateX(-5vh);
 }
 
-/* Logout bookmark positioning */
-.bookmark.logout {
-  top: -1vh;
-  left: 0vh;
-  transform: rotate(277deg);
-}
-
 .bookmark.logout:hover {
   transform: rotate(285deg) scale(1.1) translateX(-5vh);
 } 
 
 /* Specific styles for the index page */
+.welcome-message {
+  font-family: 'PPPangaia', sans-serif;
+  font-size: 3rem;
+  color: white;
+  text-align: center;
+  display: none; /* 初始隐藏，通过JS或inline样式显示 */
+}
 
 .welcome-message .username {
   font-weight: bold;
@@ -163,7 +179,6 @@ body {
   display: block;
 }
 
-/* Incorporated from parallax-effect.css */
 /* Parallax effect styles */
 .parallax-container {
   transform-style: preserve-3d;
@@ -185,7 +200,7 @@ body {
   z-index: 0;
 }
 
-/* Additional styles for the hover effect */
+/* Hover effect styles */
 .scale-on-hover {
   transition: transform 0.3s ease;
 }
@@ -194,19 +209,7 @@ body {
   transform: translateZ(20px) scale(1.1);
 }
 
-/* Incorporated from auth-transition.css */
-.transition-overlay {
-  position: fixed;
-  bottom: -100%; /* Start from below the viewport */
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 999;
-  background: url('/img/wood.jpg') no-repeat center center;
-  background-size: cover;
-  transition: bottom 1s cubic-bezier(0.19, 1, 0.22, 1); /* Exponential decrease curve */
-}
-
+/* 认证过渡相关样式 */
 .transition-overlay.active {
   bottom: 0; /* Move to fill the screen */
 }
@@ -218,14 +221,7 @@ body {
   transform: translate(-50%, -50%) scale(0);
   z-index: 1000;
   opacity: 0;
-  /* transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
-  transition-delay: 0.5s; */
 }
-
-/* .auth-form-container.active {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
-} */
 
 .auth-form-container img {
   max-width: 90%;
@@ -234,12 +230,7 @@ body {
   margin: 0 auto;
 }
 
-/* For smooth transitions between auth pages
-.form-wrapper {
-  transition: opacity 0.5s ease-in-out;
-} */
-
-/* Form switching transitions */
+/* 认证页面表单切换动画 */
 @keyframes slideUp {
   0% { transform: translateY(0); opacity: 1; }
   100% { transform: translateY(-50vh); opacity: 0; }
@@ -251,12 +242,12 @@ body {
 }
 
 .exit-up {
-  animation: slideUp 0.35s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  animation: slideUp 0.8s cubic-bezier(0.65, 0, 0.35, 1) forwards; /* 从0.35秒改为0.8秒，让动画变慢 */
   will-change: transform, opacity;
 }
 
 .enter-from-below {
-  animation: slideDown 0.6s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  animation: slideDown 1.2s cubic-bezier(0.65, 0, 0.35, 1) forwards; /* 从0.6秒改为1.2秒，让动画变慢 */
   transform: translateY(50vh);
   opacity: 0;
   will-change: transform, opacity;
@@ -291,16 +282,24 @@ body {
   box-shadow: 0 0 5px rgba(74, 103, 65, 0.5);
 }
 
-/* 适配不同视口尺寸 */
+/* 响应式样式 */
 @media screen and (max-width: 768px) {
   .background, 
   .auth-page .background,
   .transition-overlay {
     /* 在小屏幕上增加更多出血区域 */
-    top: -150px;
-    left: -150px;
-    width: calc(100% + 300px);
-    height: calc(100% + 300px);
+    top: -150px !important;
+    left: -150px !important;
+    width: calc(100% + 300px) !important;
+    height: calc(100% + 300px) !important;
+    background-size: cover !important;
+    background-position: center center !important;
+  }
+  
+  /* 小屏幕上激活状态的过渡层 - 只保留bottom属性 */
+  .transition-overlay.active {
+    bottom: 0 !important;
+    /* 移除其他属性，让它只控制bottom */
   }
 }
 
@@ -311,30 +310,15 @@ html {
   overflow: hidden;
 }
 
-/* 特定页面背景颜色 */
+/* 特定页面背景样式 */
 .index-page {
   background-color: #000; /* 确保首页背景为黑色 */
 }
 
 /* 为index页面背景额外增加出血区域 */
 .index-page .background {
-  position: fixed;
   top: -200px !important; /* 为index页面提供比其他页面更多的出血区域 */
   left: -200px !important;
   width: calc(100% + 400px) !important; /* 显著加大背景尺寸 */
   height: calc(100% + 400px) !important;
-  z-index: -1;
-  background: url('/img/main_bg.webp') no-repeat center center;
-  background-size: cover;
-  opacity: 1;
-  will-change: transform;
-}
-
-/* 恢复welcome-message的样式 */
-.welcome-message {
-  font-family: 'PPPangaia', sans-serif;
-  font-size: 3rem;
-  color: white;
-  text-align: center;
-  display: none; /* 初始隐藏，通过JS或inline样式显示 */
 } 

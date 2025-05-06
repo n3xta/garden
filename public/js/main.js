@@ -160,10 +160,10 @@ function handleAuthTransition(event, formType) {
   // 开始动画
   overlay.classList.add('active');
   
-  // 快速过渡 - 木材背景开始显示后立即导航
+  // 木材背景开始显示后导航，延长延迟与CSS过渡时间匹配
   setTimeout(() => {
     window.location.href = formType === 'login' ? '/login' : '/register';
-  }, 300);
+  }, 800); // 从300ms改为800ms，让页面跳转发生在木质过渡动画中途
 }
 
 // ===== 认证页面之间的切换动画 =====
@@ -185,12 +185,14 @@ function handleAuthPageTransition(event, formType) {
   // 添加上滑动画
   currentFormContainer.classList.add('exit-up');
   
-  // 立即开始整体透明度渐变
+  // 立即开始整体透明度渐变，但更慢一些
   if (formWrapper) {
-    formWrapper.style.transition = 'opacity 0.2s ease-out';
+    formWrapper.style.transition = 'opacity 0.6s ease-out';
     formWrapper.style.opacity = '0';
   }
   
-  // 立即导航到新页面
-  window.location.href = formType === 'login' ? '/login' : '/register';
+  // 延迟导航到新页面，让动画有时间完成
+  setTimeout(() => {
+    window.location.href = formType === 'login' ? '/login' : '/register';
+  }, 600); // 添加600ms延迟，让上滑动画有时间执行
 } 
