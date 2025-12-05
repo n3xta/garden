@@ -510,4 +510,6 @@ if (typeof document !== "undefined") {
   VanillaTilt.init(document.querySelectorAll("[data-tilt]"));
 }
 
-module.exports = VanillaTilt;
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = VanillaTilt;
+}

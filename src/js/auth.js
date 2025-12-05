@@ -73,20 +73,28 @@ if (signupForm) {
       });
 
       // 3. Create User Document in Firestore
-      const backgroundId = assignBackgroundId();
-      const newUserDoc = {
+      const userDoc = {
         username: username,
         email: email,
         createdAt: new Date().toISOString(),
-        garden: { 
-          plants: [], 
-          tempo: 80 
-        },
-        backgroundId: backgroundId,
-        gardenName: "Untitled Garden"
+        // gardenId: user.uid // Implicit 1:1 mapping
       };
 
-      await setDoc(doc(db, "users", user.uid), newUserDoc);
+      await setDoc(doc(db, "users", user.uid), userDoc);
+
+      // 4. Create Garden Document in Firestore
+      const backgroundId = assignBackgroundId();
+      const gardenDoc = {
+        ownerId: user.uid,
+        ownerUsername: username, // Duplicate for easy access
+        name: "Untitled Garden",
+        backgroundId: backgroundId,
+        plants: [],
+        tempo: 80,
+        ambientSound: null
+      };
+
+      await setDoc(doc(db, "gardens", user.uid), gardenDoc);
 
       // Redirect
       window.location.href = '/garden.html';

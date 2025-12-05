@@ -1,6 +1,6 @@
 import { auth, db } from '../config/firebase.js';
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
 
 // Global variables from original garden.js
 let scene, camera, renderer, controls;
@@ -144,25 +144,50 @@ async function init() {
 
 async function loadGardenData(uid) {
   try {
-    const docRef = doc(db, "users", uid);
-    const docSnap = await getDoc(docRef);
+    // Load Garden Data
+    const gardenDocRef = doc(db, "gardens", uid);
+    const gardenSnap = await getDoc(gardenDocRef);
 
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      gardenData = data.garden || { plants: [], tempo: 80 };
+    // Load User Data (for username backup)
+    const userDocRef = doc(db, "users", uid);
+    const userSnap = await getDoc(userDocRef);
+    let username = "Unknown";
+    if (userSnap.exists()) {
+        username = userSnap.data().username;
+    }
+
+    if (gardenSnap.exists()) {
+      const data = gardenSnap.data();
+      gardenData = { 
+          plants: data.plants || [], 
+          tempo: data.tempo || 80,
+          ambientSound: data.ambientSound || null
+      };
       backgroundId = data.backgroundId || 1;
-      if (gardenNameText) gardenNameText.textContent = data.gardenName || "Untitled Garden";
-      if (nameInput) nameInput.value = data.gardenName || "";
+      const gName = data.name || "Untitled Garden";
+
+      if (gardenNameText) gardenNameText.textContent = gName;
+      if (nameInput) nameInput.value = gName;
       
       if (isReadOnly) {
-        ownerNameSpan.textContent = data.username || "Unknown";
+        ownerNameSpan.textContent = data.ownerUsername || username;
       }
       
       // Set background
       document.documentElement.style.setProperty('--garden-background', `url('/img/garden_bg/${backgroundId}.jpg')`);
     } else {
-      console.error("No such document!");
-      alert("Garden not found.");
+      // Legacy fallback: check if it's inside user doc (migration support)
+      if (userSnap.exists() && userSnap.data().garden) {
+          console.log("Found legacy garden data...");
+          const data = userSnap.data();
+          gardenData = data.garden;
+          backgroundId = data.backgroundId || 1;
+          if (gardenNameText) gardenNameText.textContent = data.gardenName || "Untitled Garden";
+           document.documentElement.style.setProperty('--garden-background', `url('/img/garden_bg/${backgroundId}.jpg')`);
+      } else {
+          console.error("No such garden!");
+          // alert("Garden not found.");
+      }
     }
   } catch (error) {
     console.error("Error loading garden:", error);
@@ -199,6 +224,16 @@ function initializeGardenFromData() {
   tempoSlider.value = bpm;
   Tone.Transport.bpm.value = bpm;
 
+  if (gardenData.ambientSound) {
+      AmbientSoundManager.switchSound(gardenData.ambientSound);
+      const ambientIcons = document.querySelectorAll('.ambient-icon');
+      if (ambientIcons.length > 0) {
+          ambientIcons.forEach(i => i.classList.remove('active'));
+          const activeIcon = document.querySelector(`.ambient-icon[data-sound="${gardenData.ambientSound}"]`);
+          if(activeIcon) activeIcon.classList.add('active');
+      }
+  }
+
   if (gardenData.plants && gardenData.plants.length > 0) {
     gardenData.plants.forEach(plantData => {
       if (plantData.plantModelIndex !== undefined) { 
@@ -231,10 +266,20 @@ async function manualSaveGarden() {
     console.log("Saving garden state:", currentGardenState);
 
     try {
-      const userDocRef = doc(db, "users", currentUser.uid);
-      await updateDoc(userDocRef, {
-        garden: currentGardenState
-      });
+      // Update separate garden document
+      const gardenDocRef = doc(db, "gardens", currentUser.uid);
+      
+      // check if it exists first, if not create (migration)
+      // simplify: setDoc with merge true or just updateDoc if we are sure it exists.
+      // Safe bet: setDoc with merge, or checking.
+      // Since we are in manual save, we can assume we want to write the new structure.
+      
+      await setDoc(gardenDocRef, {
+        plants: currentGardenState.plants,
+        tempo: currentGardenState.tempo,
+        ambientSound: currentGardenState.ambientSound || null
+      }, { merge: true });
+
       showSaveNotification();
     } catch (error) {
       console.error("Error saving garden:", error);
@@ -249,10 +294,10 @@ async function saveGardenName() {
     AudioEffects.play('/samples/ui/save.wav');
 
     try {
-        const userDocRef = doc(db, "users", currentUser.uid);
-        await updateDoc(userDocRef, {
-          gardenName: newName
-        });
+        const gardenDocRef = doc(db, "gardens", currentUser.uid);
+        await setDoc(gardenDocRef, {
+          name: newName
+        }, { merge: true });
         
         gardenNameText.textContent = newName;
         if (nameModal) nameModal.style.display = 'none';
@@ -284,16 +329,17 @@ function getCurrentGardenState() {
         return {
             track: item.userData.track,
             step: item.userData.step,
-            plantModelIndex: item.userData.plantModelIndex,
+            plantModelIndex: item.userData.plantModelIndex !== undefined ? item.userData.plantModelIndex : 0,
             audioParams: currentAudioParams,
-            scale: item.scale.clone()
+            scale: { x: item.scale.x, y: item.scale.y, z: item.scale.z }
         }
     });
     const currentTempo = parseInt(tempoSlider.value);
     
     return {
         plants: plantsData,
-        tempo: currentTempo
+        tempo: currentTempo,
+        ambientSound: AmbientSoundManager.currentSound
     };
 }
 
