@@ -1,0 +1,482 @@
+@font-face {
+  font-family: 'PPPangaia';
+  src: url('/fonts/PPPangaia-Bold.otf') format('opentype');
+  font-weight: bold;
+}
+@font-face {
+  font-family: 'PPPangaia';
+  src: url('/fonts/PPPangaia-Ultralight.otf') format('opentype');
+  font-weight: 100;
+}
+
+:root {
+  --garden-background: url('/img/garden_bg.webp');
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  font-family: 'PPPangaia', serif;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--garden-background) no-repeat center center;
+  background-size: cover;
+  opacity: 1;
+  z-index: 0;
+  pointer-events: none;
+}
+
+#three-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.controls {
+  position: fixed;
+  bottom: 30px;
+  left: 0;
+  width: 100%;
+  z-index: 5;
+}
+
+input[type="range"] {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  -webkit-appearance: none;
+  width: 300px;
+  height: 4px;
+  background: rgba(160, 30, 30, 0.7);
+  border: none;
+  outline: none;
+  z-index: 5;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  background: #a02020;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: #a02020;
+  border: none;
+  cursor: pointer;
+}
+
+button {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: 'PPPangaia', serif;
+}
+
+button:hover {
+  background-color: transparent;
+}
+
+button:active {
+  background-color: transparent;
+}
+
+#play-button {
+  position: fixed;
+  bottom: 40px;
+  right: 300px;
+  width: 15vw;
+  height: 15vw;
+  background: url('/img/play.webp') no-repeat center center;
+  background-size: contain;
+  transition: transform 0.2s ease;
+  z-index: 5;
+}
+
+#play-button:hover {
+  transform: scale(1.05);
+}
+
+#random-note {
+  position: fixed;
+  bottom: 10px;
+  right: 90px;
+  width: 10vw;
+  height: 10vw;
+  background: url('/img/plant.webp') no-repeat center center;
+  background-size: contain;
+  transition: transform 0.2s ease;
+  z-index: 5;
+}
+
+#random-note:hover {
+  transform: scale(1.05);
+}
+
+.name-button {
+  position: fixed;
+  bottom: 250px;
+  right: 15px;
+  max-width: 7vw;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  z-index: 10;
+}
+
+.name-button:hover {
+  transform: scale(1.05);
+}
+
+.garden-name-display {
+  position: fixed;
+  bottom: 30px;
+  left: 30px;
+  background-color: rgba(0, 0, 0, 0.4);
+  color: white;
+  padding: 5px 12px;
+  border-radius: 8px;
+  max-width: 200px;
+  text-align: center;
+  z-index: 5;
+}
+
+.garden-name-display h3 {
+  margin: 0;
+  font-family: 'PPPangaia', sans-serif;
+  font-weight: 300;
+  font-size: 1.1em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.back-button {
+  position: fixed;
+  top: 15vh;
+  right: -10vh;
+  width: 35vh;
+  z-index: 10;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  transform: rotate(-5deg);
+}
+
+.back-button:hover {
+  right: 0;
+  transform: rotate(-10deg);
+}
+
+.explore-button {
+  position: fixed;
+  top: 5vh;
+  right: -10vh;
+  width: 35vh;
+  z-index: 10;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  transform: rotate(5deg);
+}
+
+.explore-button:hover {
+  right: 0;
+  transform: rotate(10deg);
+}
+
+.save-button {
+  position: fixed;
+  bottom: 360px;
+  right: 100px;
+  width: 5vw;
+  height: 5vw;
+  z-index: 10;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.save-button:hover {
+  transform: scale(1.05);
+}
+
+.save-notification {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  color: white;
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 3rem;
+  font-weight: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
+  font-family: 'PPPangaia', sans-serif;
+}
+
+.save-notification.show {
+  opacity: 1;
+}
+
+#name-notification {
+  color: #ffffff;
+}
+
+.readonly-banner {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 10px 15px;
+  border-radius: 8px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.readonly-banner p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.readonly-banner strong {
+  color: #64FFDA;
+}
+
+.my-garden-link {
+  color: #64FFDA;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 5px 10px;
+  border: 1px solid #64FFDA;
+  border-radius: 4px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.my-garden-link:hover {
+  background-color: #64FFDA;
+  color: #000;
+}
+
+.readonly-mode .tempo-slider {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .readonly-banner {
+    top: 10px;
+    right: 10px;
+    padding: 8px 12px;
+  }
+  
+  .readonly-banner p {
+    font-size: 12px;
+  }
+  
+  .my-garden-link {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+}
+
+.ambient-selector {
+  position: fixed;
+  top: 90px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 100;
+}
+
+.ambient-icon {
+  width: 4vw;
+  height: 4vw;
+  min-width: 60px;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out, opacity 0.2s ease-in-out;
+  opacity: 0.7;
+  background-color: transparent;
+  padding: 0;
+}
+
+.ambient-icon:hover {
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+.ambient-icon.active {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+  padding: 5px;
+}
+
+@media (max-width: 768px) {
+  .ambient-selector {
+    top: 80px;
+    left: 10px;
+  }
+  
+  .ambient-icon {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* Modal styles - Updated to match search overlay */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(3px);
+}
+
+.modal-content {
+  width: 80%;
+  max-width: 800px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.modal h2 {
+  margin-top: 0;
+  margin-bottom: 30px;
+  color: white;
+  font-family: 'PPPangaia', sans-serif;
+  font-weight: 100;
+  font-size: 2.5rem;
+  text-align: center;
+}
+
+#garden-name-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid white;
+  padding: 20px 10px;
+  font-size: 32px;
+  color: white;
+  font-family: 'PPPangaia', sans-serif;
+  font-weight: 100;
+  margin-bottom: 20px;
+  box-sizing: border-box;
+}
+
+#garden-name-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+#garden-name-input:focus {
+  outline: none;
+  border-color: white;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  width: 100%;
+}
+
+.modal-buttons button {
+  padding: 10px 30px;
+  font-family: 'PPPangaia', sans-serif;
+  font-weight: 100;
+  font-size: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: white;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modal-buttons button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+#save-name:hover {
+  border-color: #8FBC8F;
+  color: #8FBC8F;
+}
+
+.close-button {
+  position: absolute;
+  top: -60px;
+  right: 0;
+  color: white;
+  font-size: 3rem;
+  font-weight: 100;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.close-button:hover {
+  color: white;
+  opacity: 0.8;
+}
+
+/* Responsive styles for modal */
+@media (max-width: 768px) {
+  .modal h2 {
+    font-size: 2rem;
+  }
+  
+  #garden-name-input {
+    font-size: 1.5rem;
+    padding: 15px 10px;
+  }
+  
+  .modal-buttons button {
+    font-size: 1.2rem;
+    padding: 8px 20px;
+  }
+  
+  .close-button {
+    top: -40px;
+    font-size: 2rem;
+  }
+  
+  .save-notification {
+    font-size: 2rem;
+  }
+}

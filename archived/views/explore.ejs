@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Explore Gardens</title>
+  <link rel="icon" href="/img/favicon.jpg" type="image/jpeg">
+  
+  <link rel="stylesheet" href="/css/explore.css">
+  <link rel="stylesheet" href="/css/transition.css">
+  
+  <script src="/js/main.js"></script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vanilla-tilt@1.8.1/dist/vanilla-tilt.min.js"></script>
+</head>
+<body>
+  <div class="background"></div>
+
+  <a href="/" data-transition="true">
+    <img src="/img/back.webp" class="back-button" alt="Back to Home">
+  </a>
+  
+  <img src="/img/search.webp" class="search-button" alt="Search" id="search-button">
+  
+  <img src="/img/clear.webp" class="clear-button" alt="Clear Search" id="clear-button">
+
+  <div class="search-overlay" id="search-overlay">
+    <div class="search-input-container">
+      <input type="text" id="search-input" placeholder="Search by garden name or creator..." autofocus>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="loading" class="loading-indicator">Loading gardens...</div>
+    <div id="error-message" class="error-message" style="display: none;"></div>
+    
+    <div class="gardens-container">
+      <div id="gardens-grid" class="gardens-grid">
+      </div>
+    </div>
+  </div>
+  
+  <div class="cd-transition-layer"> 
+    <div class="bg-layer"></div>
+  </div>
+  
+  <script src="/js/transition.js"></script>
+  <script src="/js/explore.js"></script>
+</body>
+</html>

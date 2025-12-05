@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>The Garden is a Loop</title>
+  <link rel="icon" href="/img/favicon.jpg" type="image/jpeg">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/src/css/main.css">
+  <link rel="stylesheet" href="/src/css/transition.css">
+  
+  <link rel="preload" as="image" href="/img/wood.jpg">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+</head>
+<body class="index-page">
+  <div class="background full-page-bg" data-tilt data-tilt-max="1" data-tilt-speed="1" data-tilt-perspective="1000" data-tilt-scale="1" data-tilt-full-page-listening></div>
+  
+  <!-- Logged In View -->
+  <div id="logged-in-view" class="welcome-container" style="display: none;">
+    <div class="welcome-message parallax-item show" data-tilt data-tilt-max="10" data-tilt-speed="1" data-tilt-perspective="1000" data-tilt-scale="1.03" data-tilt-reset="false">
+      welcome, <span class="username" id="user-display-name"></span>
+    </div>
+  </div>
+
+  <!-- Logged Out View -->
+  <div id="logged-out-view" class="letter-container">
+    <img src="/img/letter.webp" class="letter parallax-item" alt="Letter" data-tilt data-tilt-max="10" data-tilt-speed="1" data-tilt-perspective="1000" data-tilt-scale="1.03" data-tilt-reset="false">
+  </div>
+  
+  <div class="auth-bookmarks">
+    <div id="auth-links-logged-out">
+      <a href="/login.html" class="bookmark-link login-link">
+        <img src="/img/login.webp" class="bookmark login" alt="Login">
+      </a>
+      <a href="/register.html" class="bookmark-link signup-link">
+        <img src="/img/signup.webp" class="bookmark signup" alt="Sign Up">
+      </a>
+    </div>
+    <div id="auth-links-logged-in" style="display: none;">
+      <a href="#" id="logout-link" class="bookmark-link logout-link">
+        <img src="/img/logout.webp" class="bookmark logout" alt="Logout">
+      </a>
+    </div>
+  </div>
+  
+  <div id="my-garden-link-container" style="display: none;">
+    <a href="/garden.html" data-transition="true">
+      <img src="/img/your_garden.webp" class="bookmark garden" alt="Your Garden">
+    </a>
+  </div>
+
+  <a href="/explore.html" data-transition="true">
+    <img src="/img/explore.webp" class="bookmark explore" alt="Explore">
+  </a>
+  
+  <div class="cd-transition-layer"> 
+    <div class="bg-layer"></div>
+  </div>
+  
+  <script src="/lib/vanilla-tilt.js"></script>
+  <script type="module" src="/src/js/main.js"></script>
+  <script type="module" src="/src/js/transition.js"></script>
+  <script type="module" src="/src/js/index_logic.js"></script> <!-- New file for index specific logic -->
+</body>
+</html>
