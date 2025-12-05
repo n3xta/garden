@@ -43,15 +43,15 @@
 })();
 
 document.addEventListener('DOMContentLoaded', function() {
-  var isGardenPage = window.location.pathname.includes('/garden.html') || 
+  var isGardenPage = window.location.pathname.includes('/garden') || 
                     window.location.pathname.includes('/view') || 
                     window.location.pathname.includes('/mygarden');
                     
   var isIndexPage = window.location.pathname === '/' || 
-                   window.location.pathname.includes('/index.html');
+                   window.location.pathname.includes('/index');
                    
-  var isAuthPage = window.location.pathname.includes('/login.html') || 
-                  window.location.pathname.includes('/register.html');
+  var isAuthPage = window.location.pathname.includes('/login') || 
+                  window.location.pathname.includes('/register');
                     
   console.log('当前页面:', window.location.pathname);
   console.log('检测为Garden页面:', isGardenPage);
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     var scriptsToPreload = [
-      '/js/auth.js',
+      '/src/js/auth.js',
       '/lib/vanilla-tilt.js'
     ];
     
@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     var cssToPreload = [
-      '/css/auth.css'
+      '/src/css/auth.css'
     ];
     
     cssToPreload.forEach(function(href) {
@@ -342,4 +342,4 @@ document.addEventListener('DOMContentLoaded', function() {
     
     resize = false;
   }
-}); 
+});

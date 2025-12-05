@@ -91,7 +91,8 @@ if (signupForm) {
         backgroundId: backgroundId,
         plants: [],
         tempo: 80,
-        ambientSound: null
+        ambientSound: null,
+        createdAt: new Date().toISOString()
       };
 
       await setDoc(doc(db, "gardens", user.uid), gardenDoc);

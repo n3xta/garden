@@ -240,8 +240,10 @@ function initializeGardenFromData() {
         const plant = createPlant(plantData.track, plantData.step, plantData.plantModelIndex);
         if (plant && plantData.audioParams) {
             if (plant.userData.effects) {
-                const filterFreq = plantData.audioParams.filterFreq !== undefined ? plantData.audioParams.filterFreq : 0;
-                plant.userData.effects.filter.frequency.value = filterFreq === 0 ? 20000 : (3000 - filterFreq + 300);
+                // Load saved frequency directly (fallback to 20000 if undefined/0)
+                const savedFreq = plantData.audioParams.filterFreq;
+                plant.userData.effects.filter.frequency.value = (savedFreq !== undefined && savedFreq !== 0) ? savedFreq : 20000;
+                
                 plant.userData.effects.chorus.depth.value = plantData.audioParams.chorusDepth !== undefined ? plantData.audioParams.chorusDepth : 0;
                 plant.userData.effects.delay.feedback.value = plantData.audioParams.delayFeedback !== undefined ? plantData.audioParams.delayFeedback : 0;
             }
@@ -274,11 +276,24 @@ async function manualSaveGarden() {
       // Safe bet: setDoc with merge, or checking.
       // Since we are in manual save, we can assume we want to write the new structure.
       
-      await setDoc(gardenDocRef, {
+      // Prepare data to save
+      const dataToSave = {
         plants: currentGardenState.plants,
         tempo: currentGardenState.tempo,
-        ambientSound: currentGardenState.ambientSound || null
-      }, { merge: true });
+        ambientSound: currentGardenState.ambientSound || null,
+        updatedAt: new Date().toISOString()
+      };
+
+      // Attempt to get existing username from loaded gardenData or UI if possible to ensure it's preserved/set
+      // Since we merged, existing fields like ownerUsername should persist. 
+      // But if this is a legacy migration, we might want to set it if we know it.
+      // The loadGardenData function sets global `gardenData` which might contain ownerUsername.
+      // Or we can check `currentUser.displayName` (if available)
+      if (currentUser.displayName) {
+          dataToSave.ownerUsername = currentUser.displayName;
+      }
+
+      await setDoc(gardenDocRef, dataToSave, { merge: true });
 
       showSaveNotification();
     } catch (error) {
@@ -314,32 +329,36 @@ async function saveGardenName() {
 }
 
 function getCurrentGardenState() {
-    const plantsData = plantedItems.map(item => {
-        const currentAudioParams = {};
-        if (item.userData.effects) {
-            currentAudioParams.filterFreq = item.userData.effects.filter.frequency.value;
-            currentAudioParams.chorusDepth = item.userData.effects.chorus.depth.value;
-            currentAudioParams.delayFeedback = item.userData.effects.delay.feedback.value;
-        } else {
-            currentAudioParams.filterFreq = 800;
-            currentAudioParams.chorusDepth = 0.3;
-            currentAudioParams.delayFeedback = 0.3;
-        }
+    const plantsData = plantedItems
+        .filter(item => item.userData && item.userData.track !== undefined && item.userData.step !== undefined)
+        .map(item => {
+            const currentAudioParams = {};
+            if (item.userData.effects) {
+                currentAudioParams.filterFreq = item.userData.effects.filter.frequency.value !== undefined ? item.userData.effects.filter.frequency.value : 800;
+                currentAudioParams.chorusDepth = item.userData.effects.chorus.depth.value !== undefined ? item.userData.effects.chorus.depth.value : 0.3;
+                currentAudioParams.delayFeedback = item.userData.effects.delay.feedback.value !== undefined ? item.userData.effects.delay.feedback.value : 0.3;
+            } else {
+                currentAudioParams.filterFreq = 800;
+                currentAudioParams.chorusDepth = 0.3;
+                currentAudioParams.delayFeedback = 0.3;
+            }
 
-        return {
-            track: item.userData.track,
-            step: item.userData.step,
-            plantModelIndex: item.userData.plantModelIndex !== undefined ? item.userData.plantModelIndex : 0,
-            audioParams: currentAudioParams,
-            scale: { x: item.scale.x, y: item.scale.y, z: item.scale.z }
-        }
-    });
-    const currentTempo = parseInt(tempoSlider.value);
+            return {
+                track: item.userData.track,
+                step: item.userData.step,
+                plantModelIndex: item.userData.plantModelIndex !== undefined ? item.userData.plantModelIndex : 0,
+                audioParams: currentAudioParams,
+                scale: { x: item.scale.x, y: item.scale.y, z: item.scale.z }
+            }
+        });
+    
+    let currentTempo = parseInt(tempoSlider.value);
+    if (isNaN(currentTempo)) currentTempo = 80;
     
     return {
         plants: plantsData,
         tempo: currentTempo,
-        ambientSound: AmbientSoundManager.currentSound
+        ambientSound: AmbientSoundManager.currentSound || null
     };
 }
 

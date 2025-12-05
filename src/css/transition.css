@@ -90,7 +90,7 @@ body.js-loading-ready {
   transform: translateY(-50%) translateX(-2%);
   height: 100%;
   width: 2500%;
-  background: url(../img/ink.webp) no-repeat 0 0;
+  background: url(/img/ink.webp) no-repeat 0 0;
   background-size: 100% 100%;
   
   filter: brightness(0) contrast(1000%);

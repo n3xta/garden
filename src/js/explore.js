@@ -1,5 +1,5 @@
 import { db } from '../config/firebase.js';
-import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
+import { collection, getDocs, query, limit } from "firebase/firestore";
 
 const gardensGrid = document.getElementById('gardens-grid');
 const loadingIndicator = document.getElementById('loading');
@@ -8,45 +8,91 @@ const searchInput = document.getElementById('search-input');
 const searchOverlay = document.getElementById('search-overlay');
 const searchButton = document.getElementById('search-button');
 const clearButton = document.getElementById('clear-button');
+const background = document.querySelector('.background');
 
-let allGardens = [];
+let gardens = [];
+let scrollPosition = 0;
+let targetScrollPosition = 0;
+let totalWidth = 0;
+let originalContentWidth = 0;
+let cardWidth = 0;
+let gapWidth = 20;
+let cloneBeforeWidth = 0; 
+let cloneCount = 0;
+let isScrolling = false;
+let animationFrame = null;
+let scrollTimeout = null;
+let isFiltered = false;
 
-// Init
+// Audio helper
+const AudioEffects = {
+  play: (url) => {
+    const audio = new Audio(url);
+    audio.play().catch(e => console.warn("Audio play failed", e));
+  }
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
-    setupSearch();
+    AudioEffects.play('/samples/ui/explore.wav');
+
+    setupTiltEffect();
+    
+    // Load VanillaTilt if not present (though it's in head)
+    if (typeof VanillaTilt === 'undefined') {
+        console.error('VanillaTilt is not loaded!');
+        loadVanillaTilt();
+    }
+
     await fetchGardens();
+
+    setupSearch();
+
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('resize', updateDimensions);
 });
 
 async function fetchGardens() {
     try {
         loadingIndicator.style.display = 'block';
-        const usersRef = collection(db, "users");
-        // In a real app, you'd probably want a separate "gardens" collection or an index on createdAt
-        // For now, fetching all users is "okay" if small, but we should limit.
-        // Since users collection contains everything, we query it.
-        const q = query(usersRef, limit(50)); // simple limit
+        errorMessage.style.display = 'none';
+        gardensGrid.innerHTML = '';
+
+        // Query 'gardens' collection
+        const gardensRef = collection(db, "gardens");
+        const q = query(gardensRef, limit(50));
         const querySnapshot = await getDocs(q);
 
-        allGardens = [];
+        gardens = [];
         querySnapshot.forEach((doc) => {
             const data = doc.data();
-            if (data.garden && data.garden.plants && data.garden.plants.length > 0) {
-                allGardens.push({
+            if (data.plants && data.plants.length > 0) {
+                gardens.push({
                     id: doc.id,
-                    username: data.username,
-                    gardenName: data.gardenName || "Untitled Garden",
-                    createdAt: data.createdAt,
-                    plantsCount: data.garden.plants.length,
+                    username: data.ownerUsername || "Unknown Gardener",
+                    gardenName: data.name || "Untitled Garden",
+                    createdAt: data.createdAt || data.updatedAt || new Date().toISOString(), 
+                    plantsCount: data.plants.length,
                     backgroundId: data.backgroundId || 1
                 });
             }
         });
 
-        // Sort client side for now since we can't easily composite index every field quickly without console setup
-        allGardens.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        // Sort client side
+        gardens.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-        renderGardens(allGardens);
+        if (gardens.length === 0) {
+             loadingIndicator.textContent = "No gardens found.";
+             return;
+        }
+
+        gardens.forEach(garden => {
+            const card = createGardenCard(garden);
+            gardensGrid.appendChild(card);
+        });
+
         loadingIndicator.style.display = 'none';
+        
+        setTimeout(updateDimensions, 100);
 
     } catch (error) {
         console.error("Error fetching gardens:", error);
@@ -56,118 +102,337 @@ async function fetchGardens() {
     }
 }
 
-function renderGardens(gardens) {
-    gardensGrid.innerHTML = '';
+function createGardenCard(garden, isClone = false) {
+    const card = document.createElement('div');
+    card.className = 'garden-card';
+    if (isClone) card.classList.add('clone');
+    card.dataset.id = garden.id; // Store ID for clones
     
-    if (gardens.length === 0) {
-        errorMessage.textContent = "No gardens found.";
-        errorMessage.style.display = 'block';
-        return;
-    }
-
-    errorMessage.style.display = 'none';
-
-    gardens.forEach(garden => {
-        const card = document.createElement('div');
-        card.className = 'garden-card';
-        
-        // Background Image
-        const bgId = garden.backgroundId || 1;
-        const bgUrl = `/img/garden_bg/${bgId}.jpg`;
-        
-        card.innerHTML = `
-            <div class="garden-thumbnail" style="background-image: url('${bgUrl}')">
-                <div class="plant-count">
-                    <span class="count">${garden.plantsCount}</span>
-                    <span class="label">plants</span>
-                </div>
+    // Ensure matching CSS classes: garden-preview, garden-bg-image
+    const bgId = garden.backgroundId || 1;
+    const bgUrl = `/img/garden_bg/${bgId}.jpg`;
+    
+    card.innerHTML = `
+        <div class="garden-preview">
+            <img src="${bgUrl}" alt="${garden.gardenName}" class="garden-bg-image">
+        </div>
+        <div class="garden-info">
+            <h3 class="garden-name">${garden.gardenName}</h3>
+            <p class="garden-owner">By: ${garden.username}</p>
+            <div class="garden-stats">
+                <span>${garden.plantsCount} plants</span>
+                <span>Created: ${new Date(garden.createdAt).toLocaleDateString()}</span>
             </div>
-            <div class="garden-info">
-                <h3 class="garden-name">${garden.gardenName}</h3>
-                <div class="garden-meta">
-                    <span class="author">by ${garden.username}</span>
-                    <span class="date">${new Date(garden.createdAt).toLocaleDateString()}</span>
-                </div>
-            </div>
-            <a href="/garden.html?id=${garden.id}" class="card-link" data-transition="true"></a>
-        `;
-
-        // Add tilt effect
-        if (typeof VanillaTilt !== 'undefined') {
-            VanillaTilt.init(card, {
-                max: 5,
-                speed: 400,
-                glare: true,
-                "max-glare": 0.2,
-                scale: 1.02
-            });
-        }
-
-        gardensGrid.appendChild(card);
+        </div>
+    `;
+    
+    // Navigation click
+    card.style.cursor = "pointer";
+    card.addEventListener('click', () => {
+        window.location.href = `/garden.html?id=${garden.id}`;
     });
 
-    // Re-init transition links for new elements
-    // Assuming transition.js handles global click or we need to re-attach
-    // If transition.js uses delegation (which I think I saw it might not, let's check), 
-    // we might need to trigger it. 
-    // The transition.js I wrote earlier uses `document.querySelectorAll('[data-transition="true"]')` on load.
-    // We need to attach listeners to new links.
-    attachTransitionListeners();
+    return card;
 }
 
-function attachTransitionListeners() {
-    // Simple hack: re-run the attachment logic from transition.js if accessible, or just manually attach here
-    // Since transition.js logic is scoped, we'll manually replicate the click handler if needed, 
-    // or rely on event delegation if we refactored transition.js.
-    // Let's use delegation on the grid container.
-    
-    const links = gardensGrid.querySelectorAll('a[data-transition="true"]');
-    links.forEach(link => {
-        link.addEventListener('click', (e) => {
-            // rely on global handler if present, or prevent default here
-            // e.preventDefault();
-            // But wait, transition.js runs on DOMContentLoaded. New elements won't have it.
-            // Ideally transition.js should use event delegation.
-            // I'll leave it as standard navigation for now if transition.js doesn't pick it up,
-            // or I can try to import startTransition if I exported it. I didn't export it.
-            // For now, standard nav.
-        });
-    });
-}
-
+// --- Search Logic ---
 function setupSearch() {
     if(searchButton) {
-        searchButton.addEventListener('click', () => {
-            searchOverlay.classList.add('active');
-            setTimeout(() => searchInput.focus(), 100);
-        });
+        searchButton.addEventListener('click', toggleSearchOverlay);
     }
-
+    if(clearButton) {
+        clearButton.addEventListener('click', clearSearch);
+    }
     if(searchOverlay) {
         searchOverlay.addEventListener('click', (e) => {
-            if (e.target === searchOverlay) {
-                searchOverlay.classList.remove('active');
+            if (e.target === searchOverlay) toggleSearchOverlay();
+        });
+    }
+    if (searchInput) {
+        searchInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                handleSearch();
+                toggleSearchOverlay();
+            }
+        });
+        searchInput.addEventListener('keydown', (e) => {
+            if(e.key === 'Escape') {
+                 if (searchOverlay.classList.contains('active')) toggleSearchOverlay();
             }
         });
     }
+}
 
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            const filtered = allGardens.filter(g => 
-                g.gardenName.toLowerCase().includes(term) || 
-                g.username.toLowerCase().includes(term)
-            );
-            renderGardens(filtered);
+function toggleSearchOverlay() {
+  searchOverlay.classList.toggle('active');
+  if (searchOverlay.classList.contains('active')) {
+    searchInput.focus();
+    searchInput.value = '';
+  }
+}
+
+function handleSearch() {
+    const searchTerm = searchInput.value.trim().toLowerCase();
+    errorMessage.style.display = 'none';
+
+    // Remove clones before searching
+    const existingClones = gardensGrid.querySelectorAll('.garden-card.clone');
+    existingClones.forEach(clone => clone.remove());
+
+    const gardenCards = gardensGrid.querySelectorAll('.garden-card:not(.clone)');
+    let visibleCardCount = 0;
+
+    if (searchTerm === '') {
+        gardenCards.forEach(card => {
+            card.style.display = 'flex';
+            card.style.visibility = 'visible';
+            card.style.opacity = '1';
+            visibleCardCount++;
         });
-        
-        // ESC to close
-        searchInput.addEventListener('keydown', (e) => {
-            if(e.key === 'Escape') searchOverlay.classList.remove('active');
+        clearButton.classList.remove('active');
+        isFiltered = false;
+    } else {
+        gardenCards.forEach(card => {
+            const name = card.querySelector('.garden-name').textContent.toLowerCase();
+            const owner = card.querySelector('.garden-owner').textContent.toLowerCase();
+            
+            if (name.includes(searchTerm) || owner.includes(searchTerm)) {
+                card.style.display = 'flex';
+                card.style.visibility = 'visible';
+                card.style.opacity = '1';
+                visibleCardCount++;
+            } else {
+                card.style.display = 'none';
+                card.style.visibility = 'hidden';
+                card.style.opacity = '0';
+            }
         });
+        clearButton.classList.add('active');
+        isFiltered = true;
     }
 
-    if (clearButton) { // actually this was for clearing search input? check explore.ejs
-        // It seems clear button might be for clearing search logic in original
+    if (visibleCardCount > 0) {
+        scrollPosition = 0;
+        targetScrollPosition = 0;
+        gardensGrid.style.transform = 'translateX(0)';
+        void gardensGrid.offsetWidth;
+        updateDimensions();
+    } else if (searchTerm !== '') {
+        errorMessage.textContent = `No gardens found matching "${searchTerm}"`;
+        errorMessage.style.display = 'block';
+        scrollPosition = 0;
+        targetScrollPosition = 0;
+        gardensGrid.style.transform = 'translateX(0)';
     }
+}
+
+function clearSearch() {
+  clearButton.classList.remove('active');
+  isFiltered = false;
+  errorMessage.style.display = 'none';
+  
+  const existingClones = gardensGrid.querySelectorAll('.garden-card.clone');
+  existingClones.forEach(clone => clone.remove());
+  
+  const gardenCards = gardensGrid.querySelectorAll('.garden-card:not(.clone)');
+  gardenCards.forEach(card => {
+    card.style.display = 'flex';
+    card.style.visibility = 'visible';
+    card.style.opacity = '1';
+  });
+  
+  scrollPosition = 0;
+  targetScrollPosition = 0;
+  gardensGrid.style.transform = 'translateX(0)';
+  void gardensGrid.offsetWidth;
+  updateDimensions();
+}
+
+// --- Infinite Scroll & Layout Logic ---
+
+function handleWheel(e) {
+  if (searchOverlay.classList.contains('active')) return;
+  if (totalWidth <= window.innerWidth) return; // Don't scroll if content fits
+  
+  e.preventDefault();
+  isScrolling = true;
+  
+  if (scrollTimeout) clearTimeout(scrollTimeout);
+  scrollTimeout = setTimeout(handleScrollEnd, 150);
+  
+  const delta = e.deltaY;
+  const direction = delta > 0 ? 1 : -1;
+  const scrollAmount = direction * 30; // Speed
+  
+  targetScrollPosition += scrollAmount;
+  
+  if (!animationFrame) {
+    animationFrame = requestAnimationFrame(animateScroll);
+  }
+}
+
+function handleScrollEnd() {
+  isScrolling = false;
+  
+  // Check bounds for infinite loop
+  if (scrollPosition < cloneBeforeWidth || 
+      scrollPosition > totalWidth - cloneBeforeWidth) {
+    
+    const relativePos = (scrollPosition - cloneBeforeWidth) % originalContentWidth;
+    const adjustedRelativePos = relativePos < 0 ? 
+      originalContentWidth + relativePos : relativePos;
+    
+    const newPosition = cloneBeforeWidth + adjustedRelativePos;
+    
+    gardensGrid.style.transition = 'none';
+    scrollPosition = newPosition;
+    targetScrollPosition = newPosition;
+    gardensGrid.style.transform = `translateX(-${newPosition}px)`;
+    
+    void gardensGrid.offsetWidth;
+  }
+}
+
+function animateScroll() {
+  const diff = targetScrollPosition - scrollPosition;
+  
+  if (Math.abs(diff) < 0.5) {
+    scrollPosition = targetScrollPosition;
+    animationFrame = null;
+  } else {
+    scrollPosition += diff * 0.1;
+    animationFrame = requestAnimationFrame(animateScroll);
+  }
+  gardensGrid.style.transform = `translateX(-${scrollPosition}px)`;
+}
+
+function updateDimensions() {
+  const visibleOriginalCards = Array.from(gardensGrid.querySelectorAll('.garden-card:not(.clone)'))
+    .filter(card => card.style.display !== 'none');
+  
+  if (visibleOriginalCards.length === 0) {
+    totalWidth = 0;
+    cloneBeforeWidth = 0;
+    gardensGrid.style.transform = 'translateX(0)';
+    return;
+  }
+  
+  // Remove old clones
+  const existingClones = gardensGrid.querySelectorAll('.garden-card.clone');
+  existingClones.forEach(clone => clone.remove());
+  
+  cardWidth = visibleOriginalCards[0].offsetWidth + gapWidth;
+  originalContentWidth = cardWidth * visibleOriginalCards.length;
+  
+  // Calculate how many clones needed to cover screen + buffer
+  cloneCount = Math.ceil(window.innerWidth / cardWidth) + 4;
+  
+  // Add clones at start (prepend)
+  for (let i = visibleOriginalCards.length - cloneCount; i < visibleOriginalCards.length; i++) {
+    // Wrap around index logic
+    let index = i; 
+    while(index < 0) index += visibleOriginalCards.length;
+    index = index % visibleOriginalCards.length;
+
+    const card = visibleOriginalCards[index];
+    const clone = card.cloneNode(true);
+    clone.classList.add('clone');
+    // Ensure click works on clones too
+    clone.addEventListener('click', () => {
+        // Extract ID from original card or dataset if we stored it
+        // Since we didn't store dataset id in new create function, we rely on closure.
+        // Wait, cloneNode copies attributes but not event listeners.
+        // We need to re-attach listener.
+        // Let's store ID in dataset.
+        const id = card.dataset.id; // we need to add this in createGardenCard
+        if(id) window.location.href = `/garden.html?id=${id}`;
+    });
+    gardensGrid.insertBefore(clone, gardensGrid.firstChild);
+  }
+  
+  // Add clones at end (append)
+  for (let i = 0; i < cloneCount; i++) {
+    const index = i % visibleOriginalCards.length;
+    const card = visibleOriginalCards[index];
+    const clone = card.cloneNode(true);
+    clone.classList.add('clone');
+    clone.addEventListener('click', () => {
+        const id = card.dataset.id;
+        if(id) window.location.href = `/garden.html?id=${id}`;
+    });
+    gardensGrid.appendChild(clone);
+  }
+  
+  const allVisibleCards = gardensGrid.querySelectorAll('.garden-card:not([style*="display: none"])');
+  totalWidth = cardWidth * allVisibleCards.length;
+  
+  // Determine width of prepended clones
+  // We prepended `cloneCount` items (or less if loop logic was weird, but logic above attempts `cloneCount` iterations)
+  // Actually the loop: `i = visibleOriginalCards.length - cloneCount` to `visibleOriginalCards.length`
+  // Number of iterations = cloneCount.
+  cloneBeforeWidth = cloneCount * cardWidth;
+  
+  // Set initial position to show original content (skip prepended clones)
+  scrollPosition = cloneBeforeWidth;
+  targetScrollPosition = cloneBeforeWidth;
+  
+  gardensGrid.style.transition = 'none';
+  gardensGrid.style.transform = `translateX(-${scrollPosition}px)`;
+  
+  void gardensGrid.offsetWidth;
+  gardensGrid.style.transition = 'transform 0.5s ease';
+  
+  setTimeout(initTiltEffects, 100);
+}
+
+// --- Tilt & Effects ---
+function setupTiltEffect() {
+  document.addEventListener('mousemove', function(e) {
+    if (background) {
+        const moveX = (e.clientX - window.innerWidth / 2) * 0.01;
+        const moveY = (e.clientY - window.innerHeight / 2) * 0.01;
+        background.style.transform = `translate(${moveX}px, ${moveY}px)`;
+    }
+  });
+}
+
+function loadVanillaTilt() {
+  const script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/vanilla-tilt@1.8.1/dist/vanilla-tilt.min.js';
+  script.onload = () => {
+    initTiltEffects();
+  };
+  document.head.appendChild(script);
+}
+
+function initTiltEffects() {
+  if (typeof VanillaTilt === 'undefined') return;
+  
+  const cards = document.querySelectorAll('.garden-card');
+  cards.forEach((card, index) => {
+    if (card.vanillaTilt) {
+      card.vanillaTilt.destroy();
+    }
+    
+    const isOdd = index % 2 === 0;
+    const startX = isOdd ? -20 : 20; // Alternating tilt
+    
+    card.setAttribute('data-tilt', '');
+    card.setAttribute('data-tilt-startX', startX);
+    card.setAttribute('data-tilt-reset-to-start', 'true');
+    
+    VanillaTilt.init(card, {
+      max: 15,
+      speed: 400,
+      glare: true,
+      'max-glare': 0.3,
+      gyroscope: false,
+      scale: 1.02,
+      perspective: 1000,
+      reset: true,
+      transition: true,
+      startX: startX,
+      axis: 'x'
+    });
+  });
 }
