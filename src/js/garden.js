@@ -79,6 +79,11 @@ const editControls = document.getElementById('edit-controls');
 const randomNoteContainer = document.getElementById('random-note-container');
 const backToMyGardenContainer = document.getElementById('back-to-my-garden-container');
 
+// Editor UI Elements
+const editorUI = document.getElementById('editor-ui');
+const closeEditorBtn = document.getElementById('close-editor-btn');
+let editorSpotlight; // New light for editor mode
+
 // Audio Effects Helper
 const AudioEffects = {
   play: (url) => {
@@ -247,6 +252,17 @@ function initializeGardenFromData() {
                 plant.userData.effects.chorus.depth.value = plantData.audioParams.chorusDepth !== undefined ? plantData.audioParams.chorusDepth : 0;
                 plant.userData.effects.delay.feedback.value = plantData.audioParams.delayFeedback !== undefined ? plantData.audioParams.delayFeedback : 0;
             }
+            // Set animation time based on saved chorus depth
+            if (plant.userData.animationAction && plantData.audioParams && plantData.audioParams.chorusDepth !== undefined) {
+                const action = plant.userData.animationAction;
+                const duration = action.getClip().duration;
+                const chorDepth = plantData.audioParams.chorusDepth;
+                const animationTime = (chorDepth / 0.9) * duration;
+                action.time = animationTime;
+                if (plant.userData.animationMixer) {
+                    plant.userData.animationMixer.update(0);
+                }
+            }
         }
         if (plant && plantData.scale) {
             plant.scale.copy(plantData.scale);
@@ -372,33 +388,60 @@ function showSaveNotification() {
 // --- Three.js & Game Logic (Ported from garden.js) ---
 
 function loadPlantModels(callback) {
-  let pack1Loaded = false;
-  let pack2Loaded = false;
-  let modelIndex = 0;
+  // Configuration for individual files
+  const numberOfPlants = 35; // Update this to the exact number of files you have
+  const defaultScale = 1.6;  // Unified scale for all plants
+  
+  const promises = [];
 
-  function checkCompletion() {
-      if (pack1Loaded && pack2Loaded) {
-          if (callback) callback();
-      }
+  for (let i = 1; i <= numberOfPlants; i++) {
+    const promise = new Promise((resolve) => {
+      loader.load(`/3d/plants/${i}.glb`, (gltf) => {
+        const plantModel = gltf.scene; 
+        
+        // Get bones and skinned meshes by traversing
+        const bones = [];
+        const skinnedMeshes = [];
+        
+        gltf.scene.traverse((child) => {
+          if (child.isBone) {
+            bones.push(child);
+          }
+          if (child.isSkinnedMesh) {
+            skinnedMeshes.push(child);
+          }
+          if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+          }
+        });
+
+        // Store animations if they exist
+        const animations = gltf.animations || [];
+
+        // Add to array with index matching the file number (1-based file -> 0-based index)
+        plantsArray.push({ 
+            model: plantModel, 
+            scale: defaultScale, 
+            originalIndex: i - 1,
+            animations: animations,
+            bones: bones,
+            skinnedMeshes: skinnedMeshes
+        });
+        
+        resolve();
+      }, undefined, (error) => {
+        console.warn(`Could not load plant file: /3d/plants/${i}.glb`, error);
+        resolve(); // Resolve anyway to allow others to finish
+      });
+    });
+    promises.push(promise);
   }
 
-  loader.load('/3d/pack1.glb', (gltf) => {
-    const pack1Plants = gltf.scene.children[0].children[0].children[0].children;
-    for (let plant of pack1Plants) {
-      plantsArray.push({ model: plant, scale: 1.5, originalIndex: modelIndex++ });
-    }
-    pack1Loaded = true;
-    checkCompletion();
-  }, undefined, (e) => { console.error(e); pack1Loaded = true; checkCompletion(); });
-
-  loader.load('/3d/pack2.glb', (gltf) => {
-    const pack2Plants = gltf.scene.children[0].children[0].children[0].children;
-    for (let plant of pack2Plants) {
-      plantsArray.push({ model: plant, scale: 2.3, originalIndex: modelIndex++ });
-    }
-    pack2Loaded = true;
-    checkCompletion();
-  }, undefined, (e) => { console.error(e); pack2Loaded = true; checkCompletion(); });
+  Promise.all(promises).then(() => {
+    console.log(`Loaded ${plantsArray.length} plants.`);
+    if (callback) callback();
+  });
 }
 
 function initThree() {
@@ -473,11 +516,23 @@ function initThree() {
 
 function animate() {
   requestAnimationFrame(animate);
+  
+  // Update animation mixers
+  const delta = 0.016; // Approximate 60fps, can use a clock if needed
+  plantedItems.forEach(item => {
+    if (item.userData.animationMixer) {
+      // In edit mode, we manually control the time, so don't update automatically
+      // Otherwise, mixers would be updated by Tone.js or other logic if needed
+      // For now, animations are controlled manually in edit mode only
+    }
+  });
+  
   if (isCameraAnimating) {
     updateCameraAnimation();
   } else if (controls.enabled) {
     controls.update();
   }
+  
   renderer.render(scene, camera);
 }
 
@@ -564,6 +619,18 @@ function createPlant(track, step, plantModelIndex) {
   selectedPlant.scale.set(1.0, 1.0, 1.0);
   selectedPlant.position.set(x, 0, z);
   
+  // Setup animation mixer if animations exist
+  let animationMixer = null;
+  let animationAction = null;
+  if (selectedPlantData.animations && selectedPlantData.animations.length > 0) {
+    animationMixer = new THREE.AnimationMixer(selectedPlant);
+    // Use the first animation
+    const clip = selectedPlantData.animations[0];
+    animationAction = animationMixer.clipAction(clip);
+    animationAction.paused = true; // Start paused, we'll control it manually
+    animationAction.play();
+  }
+  
   const plantSampler = new Tone.Sampler(sampleMap).toDestination();
   
   const plantFilter = new Tone.Filter(20000, "lowpass");
@@ -585,7 +652,9 @@ function createPlant(track, step, plantModelIndex) {
         chorus: plantChorus,
         delay: plantDelay,
         gain: plantGain
-    }
+    },
+    animationMixer: animationMixer,
+    animationAction: animationAction
   };
   
   scene.add(selectedPlant);
@@ -635,6 +704,10 @@ function initEvents() {
             e.preventDefault();
             openModal();
         });
+    }
+    
+    if (closeEditorBtn) {
+        closeEditorBtn.addEventListener('click', exitPlantEditor);
     }
   }
 
@@ -707,12 +780,43 @@ function enterPlantEditor(plant) {
   targetCameraPos.copy(targetControlsTarget).addScaledVector(direction, cameraDistance);
 
   isCameraAnimating = true;
-  controls.enabled = true;
-  controls.enableRotate = false;
+  controls.enabled = true; // Keep controls enabled
+  controls.enableRotate = true;
   controls.enableZoom = false;
   controls.enablePan = false;
+  
+  // --- Lighting Improvements ---
+  // Add Spotlight for the selected plant
+  if (!editorSpotlight) {
+      editorSpotlight = new THREE.SpotLight(0xffffff, 2);
+      editorSpotlight.angle = Math.PI / 6;
+      editorSpotlight.penumbra = 0.5;
+      editorSpotlight.decay = 2;
+      editorSpotlight.distance = 50;
+      editorSpotlight.castShadow = true;
+      scene.add(editorSpotlight);
+  }
+  
+  // Position spotlight above the camera/viewer towards the plant
+  const lightPos = new THREE.Vector3().copy(targetCameraPos).add(new THREE.Vector3(5, 10, 5));
+  editorSpotlight.position.copy(lightPos);
+  editorSpotlight.target = selectedPlant;
+  editorSpotlight.visible = true;
+  
+  // Show UI
+  if (editorUI) editorUI.style.display = 'block';
+  
+  // Hide other UI elements during editing
+  if (editControls) editControls.style.display = 'none';
+  if (randomNoteContainer) randomNoteContainer.style.display = 'none';
+  if (gardenNameDisplay) gardenNameDisplay.style.display = 'none';
+  if (tempoSlider) tempoSlider.style.display = 'none';
+  if (playButton) playButton.style.display = 'none';
+  document.querySelector('.ambient-selector')?.style.setProperty('display', 'none');
+  document.querySelector('.explore-button')?.style.setProperty('display', 'none');
 
   createHandles(selectedPlant);
+
   if (editHandles.length > 0) {
     dragControls = new THREE.DragControls(editHandles, camera, renderer.domElement);
     dragControls.addEventListener('dragstart', onHandleDragStart);
@@ -728,32 +832,73 @@ function exitPlantEditor() {
     dragControls = null;
   }
   removeHandles();
+  
+  // Reset Lights
   ambientLight.intensity = originalAmbientIntensity;
   directionalLight.intensity = originalDirectionalIntensity;
   scene.fog = originalFog;
+  
+  if (editorSpotlight) {
+      editorSpotlight.visible = false;
+  }
+
+  // Hide UI
+  if (editorUI) editorUI.style.display = 'none';
+  
+  // Restore other UI elements
+  if (!isReadOnly) {
+    if (editControls) editControls.style.display = 'block';
+    if (randomNoteContainer) randomNoteContainer.style.display = 'block';
+  }
+  if (gardenNameDisplay) gardenNameDisplay.style.display = 'block';
+  if (tempoSlider) tempoSlider.style.display = 'block';
+  if (playButton) playButton.style.display = 'block';
+  document.querySelector('.ambient-selector')?.style.setProperty('display', 'flex');
+  document.querySelector('.explore-button')?.style.setProperty('display', 'block');
+
   targetCameraPos.copy(originalCameraPos);
   targetControlsTarget.copy(originalControlsTarget);
   isCameraAnimating = true;
+  
+  // Re-enable controls after exiting (will be set properly in updateCameraAnimation)
+  
   selectedPlant = null;
   isEditing = false;
 }
 
 function createHandles(object) {
     removeHandles();
-    const handleSize = 0.15;
-    const handleGeometry = new THREE.BoxGeometry(handleSize, handleSize, handleSize);
-    const colors = { x: 0xff0000, y: 0x00ff00, z: 0x0000ff };
+    const handleSize = 0.15; // Smaller size
+    // Japanese Styled: Matte Spheres (Paper Lantern / Bead style)
+    const handleGeometry = new THREE.SphereGeometry(handleSize, 32, 32); 
+    
+    // Simple RGB colors
+    const colors = { 
+        x: 0xff0000, // Red
+        y: 0x00ff00, // Green
+        z: 0x0000ff  // Blue
+    }; 
     const axes = ['x', 'y', 'z'];
     const bbox = new THREE.Box3().setFromObject(object);
     const objectSize = bbox.getSize(new THREE.Vector3());
     const objectCenter = bbox.getCenter(new THREE.Vector3());
 
     axes.forEach(axis => {
-        const handleMaterial = new THREE.MeshBasicMaterial({ color: colors[axis], transparent: true, opacity: 0.8 });
+        const handleMaterial = new THREE.MeshStandardMaterial({ 
+            color: colors[axis], 
+            transparent: false, 
+            roughness: 1.0,  // Completely matte (paper/wood like)
+            metalness: 0.0,  // No reflection
+            emissive: colors[axis],
+            emissiveIntensity: 0.2 // Slight inner glow
+        });
         const handle = new THREE.Mesh(handleGeometry, handleMaterial);
         handle.userData.axis = axis;
         const position = objectCenter.clone();
-        position[axis] += objectSize[axis] / 2 + handleSize * 2;
+        
+        // Push handles out
+        position[axis] += objectSize[axis] / 2 + handleSize * 4;
+        
         handle.position.copy(position);
         scene.add(handle);
         editHandles.push(handle);
@@ -774,18 +919,19 @@ function updateHandlePositions(object, handles) {
     const bbox = new THREE.Box3().setFromObject(object);
     const objectSize = bbox.getSize(new THREE.Vector3());
     const objectCenter = bbox.getCenter(new THREE.Vector3());
-    const handleSize = handles[0].geometry.parameters.width;
+    const handleSize = handles[0].geometry.parameters.radius; // Sphere uses radius (now 0.15)
     handles.forEach(handle => {
         const axis = handle.userData.axis;
         if (!axis) return;
         const position = objectCenter.clone();
-        position[axis] += objectSize[axis] / 2 + handleSize * 2;
+        // Adjust for radius and multiplier used in createHandles (handleSize * 4)
+        position[axis] += objectSize[axis] / 2 + handleSize * 4;
         handle.position.copy(position);
     });
 }
 
 function onHandleDragStart(event) {
-    controls.enableRotate = false;
+    controls.enableRotate = false; // Temporarily disable rotation during drag
     event.object.userData.startDragPosition = event.object.position.clone();
     if (selectedPlant) {
         event.object.userData.startPlantScale = selectedPlant.scale.clone();
@@ -817,10 +963,23 @@ function onHandleDrag(event) {
         selectedPlant.userData.effects.chorus.depth.value = chorDepth;
         selectedPlant.userData.effects.delay.feedback.value = delayFb;
     }
+    
+    // Update animation based on chorus depth (Y-axis handle)
+    if (axis === 'y' && selectedPlant.userData.animationAction) {
+        const action = selectedPlant.userData.animationAction;
+        const duration = action.getClip().duration;
+        // Map chorus depth (0 to 0.9) to animation time (0 to duration)
+        const animationTime = (chorDepth / 0.9) * duration;
+        action.time = animationTime;
+        // Force update the animation without actually playing
+        if (selectedPlant.userData.animationMixer) {
+            selectedPlant.userData.animationMixer.update(0);
+        }
+    }
 }
 
 function onHandleDragEnd(event) {
-    if (isEditing) controls.enableRotate = true;
+    if (isEditing) controls.enableRotate = true; // Re-enable rotation after drag
 }
 
 function map(value, inMin, inMax, outMin, outMax) {
@@ -843,11 +1002,21 @@ function updateCameraAnimation() {
         camera.position.copy(targetCameraPos);
         controls.target.copy(targetControlsTarget);
         if (isEditing) {
-            controls.enableZoom = false; controls.enablePan = false;
-            ambientLight.intensity = 0.1; directionalLight.intensity = 0.2;
-            scene.fog = new THREE.Fog(0x222233, camera.position.distanceTo(controls.target) * 0.8, camera.position.distanceTo(controls.target) * 0.8 + 15);
+            // Keep controls enabled but restrict
+            controls.enableRotate = true;
+            controls.enableZoom = false;
+            controls.enablePan = false;
+            // Lower global lighting significantly to focus on spotlight
+            ambientLight.intensity = 0.05; 
+            directionalLight.intensity = 0.05;
+            // Push fog back so it doesn't obscure the plant
+            const dist = camera.position.distanceTo(controls.target);
+            scene.fog = new THREE.Fog(0x111122, dist + 5, dist + 25);
         } else {
-            controls.enableZoom = true; controls.enablePan = true;
+            controls.enabled = true;
+            controls.enableRotate = true;
+            controls.enableZoom = true;
+            controls.enablePan = true;
         }
     }
 }

@@ -61,6 +61,7 @@ input[type="range"] {
   left: 50%;
   transform: translateX(-50%);
   -webkit-appearance: none;
+  appearance: none;
   width: 300px;
   height: 4px;
   background: rgba(160, 30, 30, 0.7);
@@ -71,6 +72,7 @@ input[type="range"] {
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
+  appearance: none;
   width: 12px;
   height: 12px;
   background: #a02020;
@@ -480,3 +482,34 @@ button:active {
     font-size: 2rem;
   }
 }
+
+/* Editor UI - Minimalist & Contextual */
+#editor-ui {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Let clicks pass through to 3D canvas */
+    z-index: 100;
+}
+
+.close-editor-btn {
+    position: fixed;
+    top: 15vh;
+    right: -10vh;
+    width: 35vh;
+    z-index: 10;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: all 0.3s ease;
+    transform: rotate(-5deg);
+}
+
+.close-editor-btn:hover {
+    right: 0;
+    transform: rotate(-10deg);
+}
+
+/* Hide previously added overlay styles */
+#plant-editor-overlay { display: none !important; }
