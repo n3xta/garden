@@ -526,7 +526,7 @@ function showSaveNotification() {
 function loadPlantModels(callback) {
   // Configuration for individual files
   const numberOfPlants = 35; // Update this to the exact number of files you have
-  const defaultScale = 3; // Unified scale for all plants (increased from 1.6)
+  const defaultScale = 2.2; // Unified scale for all plants (increased from 1.6)
 
   const promises = [];
 
@@ -1066,14 +1066,26 @@ function enterPlantEditor(plant) {
   originalFog = scene.fog;
 
   plant.getWorldPosition(targetControlsTarget);
+  
+  // Shift camera target downward in screen space
+  // This makes the plant appear in the lower portion of the screen
+  targetControlsTarget.y += 2.5; // Move focus point upward so plant appears lower on screen
+  
   const plantSize = new THREE.Box3()
     .setFromObject(plant)
     .getSize(new THREE.Vector3());
   const cameraDistance =
     Math.max(plantSize.x, plantSize.y, plantSize.z) * 3 + 3;
+  
+  // Calculate direction with higher angle (looking down from above)
   const direction = new THREE.Vector3()
     .subVectors(camera.position, controls.target)
     .normalize();
+  
+  // Add upward bias to make camera position higher
+  direction.y += 0.5; // Increase this value for even higher camera
+  direction.normalize();
+  
   targetCameraPos
     .copy(targetControlsTarget)
     .addScaledVector(direction, cameraDistance);
@@ -1131,9 +1143,19 @@ function enterPlantEditor(plant) {
       camera,
       renderer.domElement
     );
-    dragControls.addEventListener("dragstart", onHandleDragStart);
+    
+    // Temporarily disable orbit controls only during active dragging
+    dragControls.addEventListener("dragstart", function(event) {
+      controls.enabled = false; // Disable orbit controls during drag
+      onHandleDragStart(event);
+    });
+    
     dragControls.addEventListener("drag", onHandleDrag);
-    dragControls.addEventListener("dragend", onHandleDragEnd);
+    
+    dragControls.addEventListener("dragend", function(event) {
+      controls.enabled = true; // Re-enable orbit controls immediately after drag
+      onHandleDragEnd(event);
+    });
   }
 }
 
@@ -1288,7 +1310,7 @@ function updateHandlePositions(object, handles) {
 }
 
 function onHandleDragStart(event) {
-  controls.enableRotate = true;
+  // Camera controls are managed by DragControls event listeners
   event.object.userData.startDragPosition = event.object.position.clone();
   if (selectedPlant) {
     // Store scale values, but use animationProgress for Y axis
@@ -1324,8 +1346,8 @@ function onHandleDrag(event) {
   if (axis === "y") {
     const bbox = new THREE.Box3().setFromObject(selectedPlant);
     const plantCenter = bbox.getCenter(new THREE.Vector3());
-    const maxYPosition = 5.0; // Maximum Y position for handle (adjust as needed)
-    const minYPosition = plantCenter.y + 0.5; // Minimum Y position (slightly above plant center)
+    const maxYPosition = 4.5; // Maximum Y position for handle (increased range)
+    const minYPosition = -0.5; // Minimum Y position (can go below plant center for full animation range)
 
     // Calculate what the handle position would be
     const handleSize = editHandles[0].geometry.parameters.radius;
@@ -1427,7 +1449,7 @@ function onHandleDrag(event) {
 }
 
 function onHandleDragEnd(event) {
-  if (isEditing) controls.enableRotate = true; // Re-enable rotation after drag
+  // Camera controls are managed by DragControls event listeners
   markUnsavedChanges(); // Plant was modified
 }
 
@@ -1466,6 +1488,11 @@ function updateCameraAnimation() {
       // Push fog back so it doesn't obscure the plant
       const dist = camera.position.distanceTo(controls.target);
       scene.fog = new THREE.Fog(0x111122, dist + 5, dist + 25);
+      
+      // In edit mode, update targetCameraPos to follow user's rotation
+      // This prevents the camera from snapping back to original position
+      targetCameraPos.copy(camera.position);
+      targetControlsTarget.copy(controls.target);
     } else {
       controls.enabled = true;
       controls.enableRotate = true;
