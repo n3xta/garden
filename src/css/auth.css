@@ -114,6 +114,7 @@ body.auth-page {
 }
 
 .input-overlay input[type="text"],
+.input-overlay input[type="email"],
 .input-overlay input[type="password"] {
   width: 30%;
   padding: 10px;
@@ -130,6 +131,7 @@ body.auth-page {
 }
 
 .input-overlay input[type="text"]:focus,
+.input-overlay input[type="email"]:focus,
 .input-overlay input[type="password"]:focus {
   outline: none !important;
   border: none !important;
@@ -150,7 +152,12 @@ body.auth-page {
 
 #signup-username {
   margin-left: -10px;
-  margin-bottom: 100px;
+  margin-bottom: 10px;
+}
+
+#signup-email {
+  margin-left: -10px;
+  margin-bottom: 60px;
 }
 
 #signup-password {
@@ -160,17 +167,17 @@ body.auth-page {
 
 #signup-confirm {
   margin-left: -10px;
-  margin-bottom: 250px; 
+  margin-bottom: 130px; 
 }
 
-#login-username {
+#login-email {
   margin-left: -10px;
   margin-bottom: 110px; 
 }
 
 #login-password {
   margin-left: -10px;
-  margin-bottom: 300px; 
+  margin-bottom: 200px; 
 }
 
 /* 新的图片按钮样式 */
@@ -184,8 +191,7 @@ body.auth-page {
   z-index: 2;
   margin-top: 10px;
   transition: transform 0.3s ease;
-  /* 移除按钮 */
-  display: none;
+  display: block;
 }
 
 .img-submit-btn:hover {
@@ -215,8 +221,9 @@ body.auth-page {
   transform: scale(1.1) translateZ(60px);
 }
 
-.submit-img {
-  width: 160px; 
+.submit-img,
+.signup-img {
+  width: 80px; 
   height: auto;
   transform: translateZ(5px);
 }
@@ -254,7 +261,7 @@ body.auth-page {
 
 .form-link:hover {
   text-decoration: underline;
-  transform: scale(1.1) translateZ(60px);
+  transform: scale(1) translateZ(20px);
 }
 
 .error-message {

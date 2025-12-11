@@ -316,3 +316,5 @@ mixer.update(0.001);  // Can adjust if needed (0.001 - 0.01 range)
 4. **Multiple animation clips** support (if plants have multiple animations)
 5. **Animation speed control** separate from Tone.js tempo
 
+
+

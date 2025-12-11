@@ -48,7 +48,7 @@ if (signupForm) {
   signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = document.getElementById('signup-username').value;
-    const email = document.getElementById('signup-email').value;
+    const emailInput = document.getElementById('signup-email');
     const password = document.getElementById('signup-password').value;
     const confirmPassword = document.getElementById('signup-confirm').value;
 
@@ -61,6 +61,9 @@ if (signupForm) {
         showError("Username must be at least 3 characters", 'signup-error');
         return;
     }
+
+    // Use provided email or auto-generate from username (for backward compatibility)
+    const email = emailInput ? emailInput.value : `${username}@garden.local`;
 
     try {
       // 1. Create Auth User
@@ -103,7 +106,7 @@ if (signupForm) {
       console.error("Registration error:", error);
       let msg = "Registration failed.";
       if (error.code === 'auth/email-already-in-use') {
-        msg = "Email already in use.";
+        msg = "Username already in use.";
       } else if (error.code === 'auth/weak-password') {
         msg = "Password is too weak.";
       }
