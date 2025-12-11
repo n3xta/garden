@@ -526,7 +526,7 @@ function showSaveNotification() {
 function loadPlantModels(callback) {
   // Configuration for individual files
   const numberOfPlants = 35; // Update this to the exact number of files you have
-  const defaultScale = 1.6; // Unified scale for all plants
+  const defaultScale = 3; // Unified scale for all plants (increased from 1.6)
 
   const promises = [];
 
@@ -1288,7 +1288,7 @@ function updateHandlePositions(object, handles) {
 }
 
 function onHandleDragStart(event) {
-  controls.enableRotate = false; // Temporarily disable rotation during drag
+  controls.enableRotate = true;
   event.object.userData.startDragPosition = event.object.position.clone();
   if (selectedPlant) {
     // Store scale values, but use animationProgress for Y axis
@@ -1324,7 +1324,7 @@ function onHandleDrag(event) {
   if (axis === "y") {
     const bbox = new THREE.Box3().setFromObject(selectedPlant);
     const plantCenter = bbox.getCenter(new THREE.Vector3());
-    const maxYPosition = 8.0; // Maximum Y position for handle (adjust as needed)
+    const maxYPosition = 5.0; // Maximum Y position for handle (adjust as needed)
     const minYPosition = plantCenter.y + 0.5; // Minimum Y position (slightly above plant center)
 
     // Calculate what the handle position would be
@@ -1375,8 +1375,8 @@ function onHandleDrag(event) {
     selectedPlant.userData.animationProgress || 1.0,
     minSize,
     maxSize,
-    0.1,  // Minimum volume
-    0.6   // Maximum volume
+    0.0,  // Minimum volume
+    1.0   // Maximum volume
   );
   
   if (selectedPlant.userData.effects) {
