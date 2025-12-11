@@ -499,7 +499,7 @@ button:active {
     top: 15vh;
     right: -10vh;
     width: 35vh;
-    z-index: 10;
+    z-index: 150;
     cursor: pointer;
     pointer-events: auto;
     transition: all 0.3s ease;

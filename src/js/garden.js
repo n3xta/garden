@@ -299,6 +299,17 @@ function initializeGardenFromData() {
             } else {
               plant.userData.effects.delay.feedback = delayValue;
             }
+            
+            // Set gain (volume) based on animation progress / Y-axis
+            if (plantData.scale && plantData.scale.y !== undefined) {
+              const volumeGain = map(plantData.scale.y, minSize, maxSize, 0.1, 0.6);
+              if (
+                plant.userData.effects.gain &&
+                typeof plant.userData.effects.gain.gain === "object"
+              ) {
+                plant.userData.effects.gain.gain.value = volumeGain;
+              }
+            }
           }
           // Set animation time based on saved chorus depth
           if (
@@ -331,6 +342,14 @@ function initializeGardenFromData() {
 }
 
 // --- Saving ---
+let hasUnsavedChanges = false;
+let isSaving = false;
+
+// Mark that changes have been made
+function markUnsavedChanges() {
+  hasUnsavedChanges = true;
+}
+
 async function manualSaveGarden() {
   if (isReadOnly) return;
 
@@ -367,10 +386,44 @@ async function manualSaveGarden() {
 
     await setDoc(gardenDocRef, dataToSave, { merge: true });
 
+    hasUnsavedChanges = false;
     showSaveNotification();
   } catch (error) {
     console.error("Error saving garden:", error);
     alert("Failed to save garden.");
+  }
+}
+
+// Auto-save function (silent, no UI notification)
+async function autoSaveGarden() {
+  if (isReadOnly || !currentUser || !hasUnsavedChanges || isSaving) return;
+
+  isSaving = true;
+  const currentGardenState = getCurrentGardenState();
+  console.log("Auto-saving garden state:", currentGardenState);
+
+  try {
+    const gardenDocRef = doc(db, "gardens", currentUser.uid);
+
+    const dataToSave = {
+      plants: currentGardenState.plants,
+      tempo: currentGardenState.tempo,
+      ambientSound: currentGardenState.ambientSound || null,
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (currentUser.displayName) {
+      dataToSave.ownerUsername = currentUser.displayName;
+    }
+
+    await setDoc(gardenDocRef, dataToSave, { merge: true });
+
+    hasUnsavedChanges = false;
+    console.log("Auto-save successful");
+  } catch (error) {
+    console.error("Error auto-saving garden:", error);
+  } finally {
+    isSaving = false;
   }
 }
 
@@ -398,6 +451,9 @@ async function saveGardenName() {
       nameNotification.classList.add("show");
       setTimeout(() => nameNotification.classList.remove("show"), 1500);
     }
+    
+    // Name is saved separately, so we don't need to mark changes for auto-save
+    // But we can optionally trigger it for consistency
   } catch (error) {
     console.error("Error saving garden name:", error);
   }
@@ -677,6 +733,7 @@ function addRandomNote() {
 
   if (attempts < maxAttempts) {
     createPlant(randomTrack, randomTime);
+    markUnsavedChanges();
   }
 }
 
@@ -840,7 +897,12 @@ function initEvents() {
     }
 
     if (closeEditorBtn) {
-      closeEditorBtn.addEventListener("click", exitPlantEditor);
+      closeEditorBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log("Close editor button clicked, isEditing:", isEditing, "isCameraAnimating:", isCameraAnimating);
+        exitPlantEditor();
+      });
     }
   }
 
@@ -856,6 +918,102 @@ function initEvents() {
   window.addEventListener("click", (e) => {
     if (e.target === nameModal) closeModal();
   });
+
+  // Auto-save event listeners
+  setupAutoSave();
+}
+
+function setupAutoSave() {
+  if (isReadOnly) return;
+
+  // Expose save function globally for transition.js to use
+  window.gardenAutoSave = async function() {
+    if (hasUnsavedChanges && !isReadOnly) {
+      console.log("Auto-saving before navigation...");
+      await autoSaveGarden();
+      console.log("Save complete");
+      return true;
+    }
+    return false;
+  };
+
+  // Flag to prevent multiple saves
+  let isSavingForNavigation = false;
+
+  // Intercept navigation links to save before leaving
+  document.addEventListener("click", async (e) => {
+    // Don't intercept editor close button or other non-navigation buttons
+    if (e.target.closest('#close-editor-btn') || e.target.closest('#editor-ui')) {
+      return;
+    }
+    
+    const link = e.target.closest('[data-transition="true"]');
+    if (link && hasUnsavedChanges && !isReadOnly && !isSavingForNavigation) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      
+      isSavingForNavigation = true;
+      const targetUrl = link.getAttribute('href');
+      
+      console.log("Saving before navigation to:", targetUrl);
+      
+      // Show saving indicator
+      if (saveNotification) {
+        saveNotification.textContent = "Saving...";
+        saveNotification.classList.add("show");
+      }
+      
+      try {
+        await autoSaveGarden();
+        console.log("Save complete, navigating...");
+        
+        // Update indicator
+        if (saveNotification) {
+          saveNotification.textContent = "Saved!";
+        }
+        
+        // Small delay to show the "Saved!" message
+        await new Promise(resolve => setTimeout(resolve, 300));
+      } catch (error) {
+        console.error("Save failed, navigating anyway:", error);
+        if (saveNotification) {
+          saveNotification.textContent = "Save failed";
+        }
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+      
+      if (saveNotification) {
+        saveNotification.classList.remove("show");
+      }
+      
+      // Navigate after save completes (direct navigation, no transition)
+      isSavingForNavigation = false;
+      window.location.href = targetUrl;
+    }
+  }, true); // Use capture phase to intercept before transition.js
+
+  // Auto-save when user is about to leave the page (fallback)
+  window.addEventListener("beforeunload", (e) => {
+    if (hasUnsavedChanges) {
+      console.log("beforeunload - attempting to save");
+      autoSaveGarden();
+    }
+  });
+
+  // Auto-save when tab becomes hidden (user switches tabs)
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && hasUnsavedChanges) {
+      autoSaveGarden();
+    }
+  });
+
+  // Auto-save periodically (every 30 seconds if there are changes)
+  setInterval(() => {
+    if (hasUnsavedChanges) {
+      autoSaveGarden();
+    }
+  }, 30000); // 30 seconds
 }
 
 async function togglePlay() {
@@ -876,6 +1034,7 @@ async function togglePlay() {
 function updateTempo() {
   bpm = parseInt(tempoSlider.value);
   Tone.Transport.bpm.rampTo(bpm, 0.1);
+  markUnsavedChanges();
 }
 
 function onDocumentMouseClick(event) {
@@ -960,6 +1119,9 @@ function enterPlantEditor(plant) {
   document
     .querySelector(".explore-button")
     ?.style.setProperty("display", "none");
+  document
+    .querySelector(".back-button")
+    ?.style.setProperty("display", "none");
 
   createHandles(selectedPlant);
 
@@ -976,7 +1138,17 @@ function enterPlantEditor(plant) {
 }
 
 function exitPlantEditor() {
-  if (!isEditing || isCameraAnimating) return;
+  console.log("exitPlantEditor called, isEditing:", isEditing, "isCameraAnimating:", isCameraAnimating);
+  
+  if (!isEditing) {
+    console.log("Exit blocked - not in editing mode");
+    return;
+  }
+  
+  // If camera is still animating from entering, skip the check and proceed
+  // The exit will trigger its own camera animation
+  console.log("Exiting editor mode...");
+  
   if (dragControls) {
     dragControls.dispose();
     dragControls = null;
@@ -1009,6 +1181,9 @@ function exitPlantEditor() {
   document
     .querySelector(".explore-button")
     ?.style.setProperty("display", "block");
+  document
+    .querySelector(".back-button")
+    ?.style.setProperty("display", "block");
 
   targetCameraPos.copy(originalCameraPos);
   targetControlsTarget.copy(originalControlsTarget);
@@ -1016,8 +1191,13 @@ function exitPlantEditor() {
 
   // Re-enable controls after exiting (will be set properly in updateCameraAnimation)
 
+  // Mark as changed since plant editing may have modified scales/animations
+  markUnsavedChanges();
+
   selectedPlant = null;
   isEditing = false;
+  
+  console.log("Editor exit complete, camera animation started");
 }
 
 function createHandles(object) {
@@ -1189,6 +1369,16 @@ function onHandleDrag(event) {
     0.9
   );
   const delayFb = map(selectedPlant.scale.z, minSize, maxSize, 0, 0.7);
+  
+  // Y-axis also controls volume (gain)
+  const volumeGain = map(
+    selectedPlant.userData.animationProgress || 1.0,
+    minSize,
+    maxSize,
+    0.1,  // Minimum volume
+    0.6   // Maximum volume
+  );
+  
   if (selectedPlant.userData.effects) {
     const filterValue = freq === 0 ? 20000 : 3000 - freq + 300;
     if (
@@ -1211,6 +1401,14 @@ function onHandleDrag(event) {
     ) {
       selectedPlant.userData.effects.delay.feedback.value = delayFb;
     }
+    
+    // Update volume based on Y-axis handle position
+    if (
+      selectedPlant.userData.effects.gain &&
+      typeof selectedPlant.userData.effects.gain.gain === "object"
+    ) {
+      selectedPlant.userData.effects.gain.gain.value = volumeGain;
+    }
   }
 
   // Update animation based on chorus depth (Y-axis handle)
@@ -1230,6 +1428,7 @@ function onHandleDrag(event) {
 
 function onHandleDragEnd(event) {
   if (isEditing) controls.enableRotate = true; // Re-enable rotation after drag
+  markUnsavedChanges(); // Plant was modified
 }
 
 function map(value, inMin, inMax, outMin, outMax) {
@@ -1336,6 +1535,7 @@ const AmbientSoundManager = {
     }
     if (!soundNumber || soundNumber === "none") {
       this.currentSound = null;
+      markUnsavedChanges();
       return;
     }
     this.player = new Audio(`/samples/ambient/${soundNumber}.wav`);
@@ -1343,6 +1543,7 @@ const AmbientSoundManager = {
     this.player.volume = 0.4;
     this.currentSound = soundNumber;
     this.playCurrentSound();
+    markUnsavedChanges();
   },
 };
 
