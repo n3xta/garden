@@ -249,6 +249,9 @@ function initializeGardenFromData() {
       );
       if (activeIcon) activeIcon.classList.add("active");
     }
+  } else {
+    // Initialize with no filter on first load
+    AmbientSoundManager.updateVisualFilter("none");
   }
 
   if (gardenData.plants && gardenData.plants.length > 0) {
@@ -1560,6 +1563,10 @@ const AmbientSoundManager = {
       this.player.pause();
       this.player = null;
     }
+    
+    // Update visual filter overlay
+    this.updateVisualFilter(soundNumber);
+    
     if (!soundNumber || soundNumber === "none") {
       this.currentSound = null;
       markUnsavedChanges();
@@ -1571,6 +1578,20 @@ const AmbientSoundManager = {
     this.currentSound = soundNumber;
     this.playCurrentSound();
     markUnsavedChanges();
+  },
+  updateVisualFilter: function (soundNumber) {
+    const filterOverlay = document.getElementById("visual-filter-overlay");
+    if (!filterOverlay) return;
+    
+    // Remove all ambient classes
+    filterOverlay.className = "visual-filter-overlay";
+    
+    // Add the appropriate ambient class
+    if (soundNumber && soundNumber !== "none") {
+      filterOverlay.classList.add(`ambient-${soundNumber}`);
+    } else {
+      filterOverlay.classList.add("ambient-none");
+    }
   },
 };
 
