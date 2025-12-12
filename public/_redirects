@@ -1,0 +1,8 @@
+# Cloudflare Pages Redirects
+
+# SPA fallback (if needed for client-side routing)
+# /api/* https://your-api-endpoint.com/:splat 200
+
+# 404 fallback (optional)
+# /* /index.html 200
+

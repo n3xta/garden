@@ -1,0 +1,5 @@
+name = "garden"
+compatibility_date = "2025-12-12"
+
+# Pages-specific configuration
+pages_build_output_dir = "dist"

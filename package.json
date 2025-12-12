@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy:preview": "npm run build && npm run preview",
+    "deploy:cf": "npm run build && wrangler pages deploy dist --project-name=garden"
   },
   "devDependencies": {
     "vite": "^7.2.4"
